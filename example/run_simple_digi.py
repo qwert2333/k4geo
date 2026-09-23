@@ -18,6 +18,17 @@ geoservice.detectors = [compact_file]
 geoservice.OutputLevel = INFO
 
 
+from Configurables import TracksFromGenParticles
+tracksFromGenParticles = TracksFromGenParticles("CreateTracksFromGenParticles",
+                            InputGenParticles=["MCParticles"],
+                            InputSimTrackerHits=["OTBarCollection"],
+                            OutputTracks=["TracksFromGenParticles"],
+                            OutputMCRecoTrackParticleAssociation=["TracksFromGenParticlesAssociation"],
+                            ExtrapolateToECal=False,
+                            KeepOnlyBestExtrapolation=False,
+                            TrackerIDs=[67],
+                            OutputLevel=INFO)
+
 ################ Dual-readout calorimeter
 # SiPM emulation
 from Configurables import SimpleSiPMDigiAlg
@@ -46,7 +57,7 @@ simplecali.ReadOutName = "GrainitaEcalBarrelRO"
 simplecali.InputFormat = "Energy"
 simplecali.CalibrationConstant = 1.
 simplecali.ApplyRhoPitchCorrection = True
-simplecali.AttLength = 0.34   # unit in cm
+#simplecali.AttLength = 0.34   # unit in cm
 simplecali.OutputLevel = INFO
 
 
@@ -121,6 +132,7 @@ audsvc.Auditors = [chra]
 from k4FWCore import ApplicationMgr
 application_mgr = ApplicationMgr(
     TopAlg = [
+        tracksFromGenParticles,
         simpledigi, simplecali, simpledigi_hcalbarrel, simpledigi_hcalendcap
     ],
     EvtSel = 'NONE',
