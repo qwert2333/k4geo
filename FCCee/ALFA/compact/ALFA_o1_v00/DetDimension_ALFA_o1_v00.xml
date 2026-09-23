@@ -10,6 +10,14 @@
 
     <constant name="env_safety" value="0.1*mm"/>
 
+    <constant name="tracker_region_zmax"   value="2.1*m"/>
+    <constant name="tracker_region_rmax"      value="1.8*m"/>
+
+    <constant name="DetID_OTBar_Barrel"   value="67"/>
+    <constant name="OTBar_inner_radius"   value="500*mm"/>
+    <constant name="OTBar_outer_radius"   value="1800*mm"/>
+    <constant name="OTBar_nGroupingModules" value="1"/>
+
     <constant name="ECalBarrel_inner_radius" value="2200*mm"/>
     <constant name="ECalBarrel_half_length" value="2300*mm"/>
 
