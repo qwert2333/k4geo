@@ -11,26 +11,21 @@
      #
      #==========================================================================
 -->
-  <info name="Grainita_ECAL_Barrel_v02"
-    title="Grainita ECAL full detector geometry (first ver.)"
+  <!-- <info name="Grainita_ECAL_Barrel_v02"
+    title="Grainita ECAL full detector geometry"
     author="Fangyi Guo"
     url="None"
     status="development"
-    version="0.1">
-    <comment></comment>
-  </info>
+    version="0.2">
+    <comment>
+  </info> -->
 
   <define>
-    <constant name="world_size" value="10*m"/>
-    <constant name="world_x" value="world_size"/>
-    <constant name="world_y" value="world_size"/>
-    <constant name="world_z" value="world_size"/>
-
     <!-- Global structure -->
-    <constant name="InnerRadius"          value="220*cm"/>
+    <constant name="InnerRadius"          value="ECalBarrel_inner_radius"/>
     <constant name="CrystalThickness"     value="40.5*cm"/>
     <constant name="BackSpace"            value="1.8*cm"/>
-    <constant name="HalfZ"                value="230*cm"/>
+    <constant name="HalfZ"                value="ECalBarrel_half_length"/>
     <constant name="NumberOfPhiSectors"   value="72"/>
     <constant name="NumberOfZModules"     value="15"/>
 
@@ -75,12 +70,10 @@
        If a detector contains sub-detectors, their information must be included as below.
   -->
   <detectors>
-    <detector name="Grainita_ECAL_Barrel_v02" type="Grainita_ECAL_Barrel_v02" vis="CaloVis" id ="10" readout="GrainitaEcalBarrelRO" material="MixGrains">
+    <detector name="Grainita_ECAL_Barrel_v02" type="Grainita_ECAL_Barrel_v02" vis="CaloVis" id ="DetID_ECAL_Barrel" readout="GrainitaEcalBarrelRO" material="MixGrains">
     <type_flags type=" DetType_CALORIMETER + DetType_ELECTROMAGNETIC + DetType_BARREL"/>
     </detector>
   </detectors>
-
-
 
   <readouts>
     <readout name="GrainitaEcalBarrelRO">
