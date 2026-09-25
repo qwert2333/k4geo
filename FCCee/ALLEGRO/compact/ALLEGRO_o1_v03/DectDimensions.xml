@@ -24,6 +24,7 @@
 
     <constant name="DetID_VXD_Barrel"             value=" 1"/>
     <constant name="DetID_VXD_Disks"              value=" 2"/>
+    <constant name="DetID_VXD_OuterBarrel"        value=" 31"/>
 
     <constant name="DetID_DCH"                    value=" 3"/>
 
@@ -83,10 +84,12 @@
     <constant name="VertexAcceptanceLimit"  value="0.125*rad"/>   <!-- Acceptance limit of vertex detector, used to define number of modules per stave  -->
     <constant name="VTXIB_r_min_layer"      value="13.7*mm"/>     <!-- Start of inner vertex detector layers. To keep distance of 1.3 mm from outer beam pipe end (10+0.35+1+0.35 mm = 11.7 mm). This changes to 13.7 mm due to cooling issues (see https://indico.cern.ch/event/1176398/contributions/5207171/attachments/2581129/4451907/Krakow%202023_v23_final.pdf). 
                                                                        Radius can be reduced down to the beam pipe outer radius, changing automatically the number of modules used.  -->
+    <constant name="VTXIB_SEED_Kapton_beampipe_thickness" value="0.1*mm"/> <!-- Thickness of the Kapton layer on the beampipe. Kapton layer is used if Vertex_inner_radius+VTXIB_SEED_Kapton_beampipe_thickness = VTXIB_r_min_layer -->
     <constant name="VTXIB_r_min_clearance"  value="(VTXIB_r_min_layer-CentralBeamPipe_rmax-BeamPipeWidth)/2."/>    <!-- Clearance of vertex detector in radius, used for definiton of vertex DD4hep_SubdetectorAssembly -->
     <constant name="VTXIB_r_max_layer"      value="34.0*mm"/>     <!-- Position of the outermost vertex inner barrel layer -->
     <constant name="VTXIB_r_max"            value="50.0*mm"/>     <!-- End of inner vertex = outer radius of inner vertex tube -->
     <constant name="VTXIB_half_length"      value="556.2/2.*mm"/> <!-- 278.1*mm, half length of inner vertex tube -->
+    <constant name="VTXIB_tube_thickness"   value="0.2*mm"/>      <!-- Thickness of the inner vertex tube needed for air-cooling -->
 
     <constant name="VTXOB_r_min_layer"    value="130*mm"/>        <!-- R of the innermost layer of the outer vertex -->
     <constant name="VTXOB_r_max_layer"    value="315*mm"/>        <!-- R of the outermost layer of the outer vertex -->
@@ -102,6 +105,13 @@
     <constant name="VTX_r_min" value="VTXIB_r_min_layer-VTXIB_r_min_clearance"/>  <!-- Not used, just do indicate the vertex detector envelope limits -->
     <constant name="VTX_r_max" value="VTXOB_r_max_layer+VTXOB_rmax_clearance"/>   <!-- Not used, just do indicate the vertex detector envelope limits -->
     <constant name="VTX_z_max" value="VTXD_z_max_total"/>                         <!-- Not used, just do indicate the vertex detector envelope limits -->
+
+    <constant name="VTXIB_pitch_z"      value="0.020*mm"/>  <!-- Assume 20x20 µm pitch, DRD3 OCTOPUS-like sensors -->
+    <constant name="VTXIB_pitch_phi"    value="0.020*mm"/>
+    <constant name="VTXOB_pitch_z"      value="0.020*mm"/>  <!-- Assume 20x20 µm pitch, DRD3 OCTOPUS-like sensors -->
+    <constant name="VTXOB_pitch_phi"    value="0.020*mm"/>
+    <constant name="VTXD_pitch_r"       value="0.020*mm"/>  <!-- Assume 20x20 µm pitch, DRD3 OCTOPUS-like sensors -->
+    <constant name="VTXD_pitch_phi"     value="0.020*mm"/>
 
     <!--  Drift Chamber parameters    -->
     <!-- Changing the radius is not enough to resize the detector, please contact the experts-->
@@ -123,17 +133,17 @@
     <constant name="SiWrD_inner_radius" value="350.0*mm"/>  <!-- Can be freely changed. Must be smaller than 'SiWrB_inner_radius' -->
     <constant name="SiWrD_outer_radius" value="2040.0*mm"/> <!-- Can be freely changed. Must be larger than 'SiWrD_inner_radius' and SiWrD_outer_radius-SiWrD_inner_radius must be smaller than ~ 2450 mm, otherwise the number of available rings is not large enough to cover the whole area -->
     <constant name="SiWrD_services_opening"  value="30*mm"/><!-- Can be freely changed. -->
-    <constant name="SiWr_nLayers"       value="2"/>         <!-- Can be either 1 or 2 -->
+    <constant name="SiWr_nLayers"       value="1"/>         <!-- Can be either 1 or 2 -->
     <constant name="SiWrD_zmin"         value="3020.0*mm"/> <!-- Can be freely changed, as long as SiWrD_zmax-SiWrD_zmin is >7cm (SiWr_nLayers=2) or >=5cm (SiWr_nLayers=1) -->
     <constant name="SiWrD_zmax"         value="3090.0*mm"/> <!-- Can be freely changed, as long as SiWrD_zmax-SiWrD_zmin is kept constant or is increased -->
-    <constant name="SiWrB_pitch_z0"     value="1.000*mm"/>  <!-- The pitches can be freely changed and can be different for the two layers. These pitches here are just an assumption, impact on physics needs to be studied in detail! -->
+    <constant name="SiWrB_pitch_z0"     value="0.050*mm"/>  <!-- The pitches can be freely changed and can be different for the two layers. These pitches here are just an assumption, impact on physics needs to be studied in detail! Currently assuming 50x50 um2 pixels, AC-LGADs or MAPS -->
     <constant name="SiWrB_pitch_z1"     value="0.050*mm"/>
     <constant name="SiWrB_pitch_phi0"   value="0.050*mm"/>
-    <constant name="SiWrB_pitch_phi1"   value="1.000*mm"/>
-    <constant name="SiWrD_pitch_r0"     value="1.000*mm"/>
+    <constant name="SiWrB_pitch_phi1"   value="0.050*mm"/>
+    <constant name="SiWrD_pitch_r0"     value="0.050*mm"/>
     <constant name="SiWrD_pitch_r1"     value="0.050*mm"/>
     <constant name="SiWrD_pitch_phi0"   value="0.050*mm"/>
-    <constant name="SiWrD_pitch_phi1"   value="1.000*mm"/>
+    <constant name="SiWrD_pitch_phi1"   value="0.050*mm"/>
 
     <!-- LAr ECAL Calo Barrel -->
     <constant name="BarECal_id" value="DetID_ECAL_Barrel"/>
@@ -254,108 +264,10 @@
   </limits>
   <regions>
     <region name="BeampipeRegion"/>
-    <region name="VTXBRegion"/>
-    <region name="VTXDRegion"/>
+    <region name="VertexBarrelRegion"/>
+    <region name="VertexEndcapRegion"/>
     <region name="SiWrBRegion"/>
     <region name="SiWrDRegion"/>
   </regions>
-
-
-  <display>
-    <vis name="VXDVis"        alpha="0.2" r="0.1" 	  g=".5"      b=".5"    showDaughters="false" visible="true"/>
-    <vis name="SiWrVis"       alpha="0.2" r="1.0"  	  g="1.0"     b="0.0"   showDaughters="false" visible="true"/>
-    <vis name="ITVis"       	alpha="1.0" r="0.54"  	g="0.43"    b="0.04"  showDaughters="true"  visible="true"/>
-    <vis name="OTVis"       	alpha="1.0" r="0.8"   	g="0.8"     b="0.4"   showDaughters="true"  visible="false"/>
-    <vis name="ECALVis"     	alpha="1.0" r="0.2"   	g="0.6"     b="0"     showDaughters="true"  visible="true"/>
-    <vis name="HCALVis"     	alpha="1.0" r="0.078" 	g="0.01176" b="0.588" showDaughters="true"  visible="true"/>
-    <vis name="SOLVis"      	alpha="1.0" r="0.4"   	g="0.4"     b="0.4"   showDaughters="true"  visible="true"/>
-    <vis name="MUONVis"     	alpha="1.0" r="0.6"   	g="0.0"     b="0.0"   showDaughters="true"  visible="true"/>
-    <vis name="LCALInstrVis"  alpha="1.0" r="0.35"  	g="0.0"     b="0.47"  showDaughters="true"  visible="true"/>
-    <vis name="LCALVis"    	alpha="1.0" r="0.25"  	g="0.88"    b="0.81"  showDaughters="true"  visible="true"/>
-    <vis name="LCALCoolVis"   alpha="1.0" r="0.2"   	g="0.6"     b="0"     showDaughters="true"  visible="true"/>
-    <vis name="BCALVis"     	alpha="1.0" r="0.0"   	g="0.4"     b="0.4"   showDaughters="true"  visible="true"/>
-    <vis name="KICKVis"     	alpha="1.0" r="1.0"   	g="0.498"   b="0.0"   showDaughters="true"  visible="true"/>
-    <vis name="QD0CoilIVis"   alpha="1.0" r="1.0"   	g="0.498"   b="0.0"   showDaughters="true"  visible="true"/>
-    <vis name="QD0CoilOVis"   alpha="1.0" r="1.0"   	g="0.25"    b="0.0"   showDaughters="true"  visible="true"/>
-    <vis name="CompSolVis"    alpha="1.0" r="0.5"   	g="0.5"     b="0.0"   showDaughters="true"  visible="true"/>
-    <vis name="ScreenSolVis"  alpha="1.0" r="1"   	g="1"       b="0"     showDaughters="true"  visible="true"/>
-    <vis name="ColliVis"      alpha="1.0" r="0.7"   	g="0.5"     b="1"     showDaughters="true"  visible="true"/>
-    <vis name="TantalumVis"   alpha="1.0" r="1"   	g="0.5"     b="0.5"   showDaughters="true"  visible="true"/>
-    <vis name="BPMVis"      	alpha="1.0" r="0.25"  	g="0.88"    b="0.81"  showDaughters="true"  visible="true"/>
-    <vis name="SupportVis"  	alpha="1"   r="0.2"   	g="0.2"     b="0.2"   showDaughters="true" visible="true"/>
-
-    <!-- 
-        
-    This version reuses some files from IDEA_o1_v03 and IDEA_o1_v04 as-is:
-    - DriftChamber_o1_v02
-    - VertexComplete_o1_v04
-    - SiliconWrapper_o1_v02
-
-    The vis entries below are duplicated from that version colors.xml file to keep this one self-contained
-
-    -->
-
-    <!-- Drift chamber (reused as-is from IDEA_o1_v03/DriftChamber_o1_v02.xml) -->
-    <vis name="dch_aerogel_vis" r="236/256" g="237/256" b="232/256" alpha="0.5" showDaughters="true" visible="true"/>
-    <vis name="dch_gas_vis" r="227/256" g="239/256" b="217/256" alpha="0.5" showDaughters="true" visible="true"/>
-    <vis name="dch_vessel_vis" r="244/256" g="177/256" b="132/256" alpha="0.5" showDaughters="true" visible="true"/>
-    <vis name="dch_cooling_vis" r="254/256" g="230/256" b="151/256" alpha="0.5" showDaughters="false" visible="true"/>
-    <vis name="dch_sensor_vis" r="255/256" g="0/256" b="0/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis" r="255/256" g="230/256" b="153/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis1" r="128/256" g="230/256" b="153/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis2" r="128/256" g="128/256" b="153/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis3" r="128/256" g="128/256" b="256/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis4" r="000/256" g="128/256" b="256/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis5" r="000/256" g="000/256" b="256/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis6" r="256/256" g="000/256" b="256/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis7" r="256/256" g="128/256" b="256/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis8" r="256/256" g="128/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis9" r="256/256" g="128/256" b="000/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis10" r="128/256" g="256/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis11" r="128/256" g="256/256" b="000/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis12" r="000/256" g="256/256" b="000/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis13" r="000/256" g="256/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis14" r="000/256" g="128/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis15" r="000/256" g="128/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis16" r="000/256" g="128/256" b="055/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis17" r="000/256" g="128/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis18" r="055/256" g="128/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis19" r="055/256" g="128/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis20" r="055/256" g="128/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_layer_vis21" r="055/256" g="128/256" b="128/256" alpha="1.0" showDaughters="false" visible="true"/>
-    <vis name="dch_no_vis_nodaughters" showDaughters="false" visible="false"/>
-    <vis name="dch_no_vis" showDaughters="true" visible="false"/>
-    <vis name="dch_envelope_vis" r="0/256" g="96/256" b="156/256" alpha="0.3" showDaughters="true" visible="true"/>
-    <vis name="dch_vessel_bulk_vis" r="236/256" g="000/256" b="000/256" alpha="1.00" showDaughters="true" visible="false"/>
-
-    <!-- Vertex (reused as-is from IDEA_o1_v04/VertexComplete_o1_v04.xml) -->
-    <vis name="VTXSensitiveVis" alpha="1.0" r="1.0" g="1.0" b="0.0" showDaughters="true" visible="true"/>
-    <vis name="VTXPeripheryVis" alpha="1.0" r="200/255" g="254/255" b="0.0" showDaughters="true" visible="true"/>
-    <vis name="VTXMetalLayerVis" alpha="0.2" r="200/255" g="254/255" b="0.0" showDaughters="true" visible="true"/>
-    <vis name="VTXSupportVis" alpha="1.0" r="0.2" g="0.2" b="0.2" showDaughters="true" visible="true"/>
-    <vis name="VTXCarbonFoamVis" alpha="1.0" r="0.2" g="0.2" b="0.2" showDaughters="true" visible="true"/>
-    <vis name="VTXCableVis" alpha="1.0" r="0.0" g="1.0" b="0.4" showDaughters="true" visible="true"/>
-    <vis name="VTXHybridVis" alpha="1.0" r="0.35" g="0.83" b="0.33" showDaughters="true" visible="true"/>
-    <vis name="VTXPipingVis" alpha="1.0" r="1.0" g="1.0" b="1.0" showDaughters="true" visible="true"/>
-    <vis name="VTXWaterVis" alpha="1.0" r="0.0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
-    <vis name="VTXGlueVis" alpha="1.0" r="1.0" g="0.75" b="0.79" showDaughters="true" visible="true"/>
-    <vis name="VTXRohacellVis" alpha="1.0" r="1.0" g="1.0" b="1.0" showDaughters="true" visible="true"/>
-    <vis name="VTXPEEKVis" alpha="1.0" r="1.0" g="0.65" b="0.0" showDaughters="true" visible="true"/>
-    <vis name="VTXtrussStructureVis" alpha="0.3" r="0.5" g="0.5" b="0.5" showDaughters="true" visible="true"/>
-    <vis name="VTXIBTube" alpha="0.8" r="0.25" g="0.25" b="0.2" showDaughters="true" visible="true"/>
-    <vis name="VTXDiskSupportVis" alpha="0.2" r="0.2" g="0.2" b="0.2" showDaughters="true" visible="true"/>
-    <vis name="VTXVis" alpha="0.2" r="0.1" g="0.5" b="0.5" showDaughters="true" visible="true"/>
-    <vis name="KaptonVis" alpha="1.0" r="1.0" g="0.6" b="0.0" showDaughters="true" visible="true"/>
-
-    <!-- Silicon wrapper (reused as-is from IDEA_o1_v04/SiliconWrapper_o1_v02.xml) -->
-    <vis name="SiWrEnvVis" alpha="0.2" r="1.0" g="1.0" b="0.0" showDaughters="true" visible="true"/>
-    <vis name="SiWrSensitiveVis" alpha="1.0" r="1.0" g="1.0" b="0.0" showDaughters="true" visible="true"/>
-    <vis name="SiWrPeripheryVis" alpha="1.0" r="200/255" g="254/255" b="0.0" showDaughters="true" visible="true"/>
-    <vis name="SiWrCableVis" alpha="1.0" r="0.0" g="1.0" b="0.4" showDaughters="true" visible="true"/>
-    <vis name="SiWrPipingVis" alpha="1.0" r="1.0" g="1.0" b="1.0" showDaughters="true" visible="true"/>
-    <vis name="SiWrWaterVis" alpha="1.0" r="0.0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
-    <vis name="SiWrSupportVis" alpha="0.8" r="0.25" g="0.25" b="0.2" showDaughters="true" visible="true"/>
-    <vis name="SiWrStaveVis" alpha="0.8" r="1.0" g="0.5" b="0.0" showDaughters="false" visible="true"/>
-  </display>
 
 </lccdd>
