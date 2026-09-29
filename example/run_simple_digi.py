@@ -6,7 +6,7 @@ from Gaudi.Configuration import *
 from k4FWCore import IOSvc
 from Configurables import EventDataSvc
 io_svc = IOSvc("IOSvc")
-io_svc.Input = "AlfaSim_ECALHCAL_pi-_10GeV.root"
+io_svc.Input = "AlfaSim_pi-_10GeV.root"
 io_svc.Output = "ALFA_CaloDigi_pi-_10GeV.root"
 
 ################## Simulation setup
