@@ -6,7 +6,7 @@ from Gaudi.Configuration import *
 from k4FWCore import IOSvc
 from Configurables import EventDataSvc
 io_svc = IOSvc("IOSvc")
-io_svc.Input = "AlfaCalSimulation.root"
+io_svc.Input = "AlfaSim_pi-_10GeV.root"
 io_svc.Output = "ALFA_CaloDigi_pi-_10GeV.root"
 
 ################## Simulation setup
@@ -24,15 +24,15 @@ tracksFromGenParticles = TracksFromGenParticles("CreateTracksFromGenParticles",
                             InputSimTrackerHits=["OTBarCollection"],
                             OutputTracks=["TracksFromGenParticles"],
                             OutputMCRecoTrackParticleAssociation=["TracksFromGenParticlesAssociation"],
-                            ExtrapolateToECal=False,
+                            ExtrapolateToECal=True,
                             KeepOnlyBestExtrapolation=False,
                             TrackerIDs=[67],
                             OutputLevel=INFO)
 
 ################ Dual-readout calorimeter
 # SiPM emulation
-from Configurables import SimpleSiPMDigiAlg
-simpledigi = SimpleSiPMDigiAlg("simpledigi_ecalbarrel")
+from Configurables import FastSiPMDigiWithEdep
+simpledigi = FastSiPMDigiWithEdep("simpledigi_ecalbarrel")
 simpledigi.InputSimCaloHitCollection = "GrainitaCalorimeterHits"
 simpledigi.OutputCaloHitCollection = "GrainitaEcalBarrelDigiHit"
 simpledigi.OutputCaloSimLinkCollection = "GrainitaEcalBarrelDigiHit_SimHit_link"
@@ -44,24 +44,22 @@ simpledigi.SiPMCT = 0.01
 simpledigi.SiPMDCR = 90e-6  # unit GHz
 simpledigi.SiPMPixel = 10000
 simpledigi.LightYield = 10  # ph / MeV
-simpledigi.WriteNtuple = False
-simpledigi.OutFileName = "DigiTuple_EcalBarrel_pi-_30GeV.root"
 simpledigi.OutputLevel = INFO
 
 
-from Configurables import SimpleCalibAlg
-simplecali = SimpleCalibAlg("SimpleCalibAlg")
-simplecali.InputCaloHitCollection = "GrainitaEcalBarrelDigiHit"
-simplecali.OutputCaloHitCollection = "GrainitaEcalBarrelCalibHit"
-simplecali.ReadOutName = "GrainitaEcalBarrelRO"
-simplecali.InputFormat = "Energy"
-simplecali.CalibrationConstant = 1.
-simplecali.ApplyRhoPitchCorrection = True
-#simplecali.AttLength = 0.34   # unit in cm
-simplecali.OutputLevel = INFO
+#from Configurables import SimpleCalibAlg
+#simplecali = SimpleCalibAlg("SimpleCalibAlg")
+#simplecali.InputCaloHitCollection = "GrainitaEcalBarrelDigiHit"
+#simplecali.OutputCaloHitCollection = "GrainitaEcalBarrelCalibHit"
+#simplecali.ReadOutName = "GrainitaEcalBarrelRO"
+#simplecali.InputFormat = "Energy"
+#simplecali.CalibrationConstant = 1.
+#simplecali.ApplyRhoPitchCorrection = True
+##simplecali.AttLength = 0.34   # unit in cm
+#simplecali.OutputLevel = INFO
 
 
-simpledigi_hcalbarrel = SimpleSiPMDigiAlg("simpledigi_hcalbarrel")
+simpledigi_hcalbarrel = FastSiPMDigiWithEdep("simpledigi_hcalbarrel")
 simpledigi_hcalbarrel.InputSimCaloHitCollection = "HCalBarrelCollection"
 simpledigi_hcalbarrel.OutputCaloHitCollection = "HcalBarrelDigiHit"
 simpledigi_hcalbarrel.OutputCaloSimLinkCollection = "HcalBarrelDigiHit_SimHit_link"
@@ -73,12 +71,10 @@ simpledigi_hcalbarrel.SiPMCT = 0.01
 simpledigi_hcalbarrel.SiPMDCR = 90e-6  # unit GHz
 simpledigi_hcalbarrel.SiPMPixel = 10000
 simpledigi_hcalbarrel.LightYield = 100  # ph / MeV
-simpledigi_hcalbarrel.WriteNtuple = False
-simpledigi_hcalbarrel.OutFileName = "DigiTuple_HcalBarrel_pi-_30GeV.root"
 simpledigi_hcalbarrel.OutputLevel = INFO
 
 
-simpledigi_hcalendcap = SimpleSiPMDigiAlg("simpledigi_hcalendcap")
+simpledigi_hcalendcap = FastSiPMDigiWithEdep("simpledigi_hcalendcap")
 simpledigi_hcalendcap.InputSimCaloHitCollection = "HCalEndcapCollection"
 simpledigi_hcalendcap.OutputCaloHitCollection = "HcalEndcapDigiHit"
 simpledigi_hcalendcap.OutputCaloSimLinkCollection = "HcalEndcapDigiHit_SimHit_link"
@@ -90,8 +86,6 @@ simpledigi_hcalendcap.SiPMCT = 0.01
 simpledigi_hcalendcap.SiPMDCR = 90e-6  # unit GHz
 simpledigi_hcalendcap.SiPMPixel = 10000
 simpledigi_hcalendcap.LightYield = 100  # ph / MeV
-simpledigi_hcalendcap.WriteNtuple = False
-simpledigi_hcalendcap.OutFileName = "DigiTuple_HcalEndcap_pi-_30GeV.root"
 simpledigi_hcalendcap.OutputLevel = INFO
 
 
@@ -133,7 +127,7 @@ from k4FWCore import ApplicationMgr
 application_mgr = ApplicationMgr(
     TopAlg = [
         tracksFromGenParticles,
-        simpledigi, simplecali, simpledigi_hcalbarrel, simpledigi_hcalendcap
+        simpledigi, simpledigi_hcalbarrel, simpledigi_hcalendcap
     ],
     EvtSel = 'NONE',
     EvtMax = -1,
