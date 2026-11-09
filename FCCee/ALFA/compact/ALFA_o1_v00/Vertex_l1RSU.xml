@@ -1,0 +1,13 @@
+<lccdd>
+
+    <comment> Sensor components of the vertex detector </comment>
+
+
+    <component name="Sensor_Matrix" sensitive="True" isCurved="true" ymin="-VTX_l1RSU_z / 2." ymax="VTX_l1RSU_z / 2." xmin="-VTX_l1RSU_rphi_sensitive / 2." xmax="VTX_l1RSU_rphi_sensitive / 2." vis="VTXSensitiveVis" nsegments="4"/>
+    <component name="Sensor_Periphery" sensitive="False" isCurved="true" ymin="-VTX_l1RSU_z / 2." ymax="VTX_l1RSU_z / 2." xmin="-VTX_l1RSU_rphi / 2." xmax="-VTX_l1RSU_rphi / 2. + VTX_l1RSU_rphi_periphery" vis="VTXPeripheryVis"/>
+    <component name="Sensor_Periphery" sensitive="False" isCurved="true" ymin="-VTX_l1RSU_z / 2." ymax="VTX_l1RSU_z / 2." xmin="+VTX_l1RSU_rphi / 2. - VTX_l1RSU_rphi_periphery" xmax="VTX_l1RSU_rphi / 2." vis="VTXPeripheryVis"/>
+
+
+
+
+</lccdd>

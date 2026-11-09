@@ -33,7 +33,8 @@
 
   <comment> Magnetic field strength </comment>
   <define>
-    <constant name="Solenoid_field" value="3.0*tesla"/>
+    <constant name="Solenoid_inner_field" value="0.0*tesla"/>
+    <constant name="Solenoid_outer_field" value="0.0*tesla"/>
   </define>
 
   <limits>
@@ -66,8 +67,8 @@
   <comment> Assume constant field for lt inner field and lt outer field (beyond coil) </comment>
   <fields>
     <field name="Solenoid" type="solenoid"
-      inner_field="Solenoid_field"
-      outer_field="-1.0*tesla"
+      inner_field="Solenoid_inner_field"
+      outer_field="Solenoid_outer_field"
       zmax="Solenoid_Coil_half_length"
       outer_radius="Solenoid_Coil_radius">
     </field>

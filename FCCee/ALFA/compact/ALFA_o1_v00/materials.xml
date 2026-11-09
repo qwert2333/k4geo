@@ -244,28 +244,37 @@
   </material>
 
 
-    <material name="G4_POLYSTYRENE">
-      <MEE unit="eV" value="68.7"/>
-      <D type="density" value="1.06" unit="g/cm3"/>
-      <fraction n="0.077418" ref="H"/>
-      <fraction n="0.922582" ref="C"/>
-    </material>
+  <material name="G4_POLYSTYRENE">
+    <MEE unit="eV" value="68.7"/>
+    <D type="density" value="1.06" unit="g/cm3"/>
+    <fraction n="0.077418" ref="H"/>
+    <fraction n="0.922582" ref="C"/>
+    <constant name="BirksConstant" value="0.126*mm/MeV"/>
+  </material>
 
-    <material name="Steel235">
-      <D value="7.85" unit="g/cm3"/>
-      <fraction n="0.998" ref="Fe"/>
-      <fraction n=".002" ref="C"/>
-    </material>
+  <material name="Steel235">
+    <D value="7.85" unit="g/cm3"/>
+    <fraction n="0.998" ref="Fe"/>
+    <fraction n=".002" ref="C"/>
+  </material>
 
-    <material name="PCB" state="solid">
-      <MEE unit="eV" value="88.255598548367"/>
-      <D unit="g/cm3" value="1.7"/>
-      <fraction n="0.180774" ref="Si"/>
-      <fraction n="0.405633" ref="O"/>
-      <fraction n="0.278042" ref="C"/>
-      <fraction n="0.0684428" ref="H"/>
-      <fraction n="0.0671091" ref="Br"/>
-    </material>
+  <material name="PCB" state="solid">
+    <MEE unit="eV" value="88.255598548367"/>
+    <D unit="g/cm3" value="1.7"/>
+    <fraction n="0.180774" ref="Si"/>
+    <fraction n="0.405633" ref="O"/>
+    <fraction n="0.278042" ref="C"/>
+    <fraction n="0.0684428" ref="H"/>
+    <fraction n="0.0671091" ref="Br"/>
+  </material>
+
+  <!-- FEE material: 20% Si + 80% Cu by volume (rho_Si=2.33, rho_Cu=8.96 g/cm3),
+       converted to mass fractions; density = 0.2*2.33 + 0.8*8.96 = 7.634 g/cm3 -->
+  <material name="FEEMat" state="solid">
+    <D unit="g/cm3" value="7.634"/>
+    <fraction n="0.0610427" ref="Si"/>
+    <fraction n="0.9389573" ref="Cu"/>
+  </material>
 
 </materials>
 </lccdd>

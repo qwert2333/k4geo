@@ -1,0 +1,234 @@
+<lccdd>
+
+    <info name="ALFA_Vertex"
+        title="ALFA Vertex"
+        author="Eduardo Ploerer"
+        url="no_url"
+        status="development"
+        version="v01">
+    </info>
+
+
+    <display>
+        <vis name="VTXEnvVis"          alpha="1.0" r="1.0" g="1.0" b="0.0" showDaughters="true" visible="false"/>
+
+
+        <vis name="VTXStaveVis"        alpha="1.0" r="1.0" g="0.5" b="0.0" showDaughters="true" visible="true"/>
+        <vis name="VTXSupportTrussVis"       alpha="1.0" r="0.6" g="0.6" b="0.6" showDaughters="true" visible="true"/>
+        <vis name="VTXSupportFilledVis"       alpha="1.0" r="0.5" g="0.5" b="0.5" showDaughters="true" visible="true"/>
+        <vis name="VTXCoolingPlateVis" alpha="1.0" r="0.621" g="0.793" b="1.000" showDaughters="true" visible="true"/>
+
+        <!-- <vis name="VTXCoolingPipeVis"       alpha="1.0" r="1.0" g="1.0" b="1.0" showDaughters="true" visible="false"/> -->
+        <!-- <vis name="VTXCoolingFluidVis"        alpha="1.0" r="0.0" g="0.0" b="1.0" showDaughters="true" visible="false"/> -->
+        <!-- <vis name="VTXPeripheryVis" alpha="1.0" r="0.0" g="0.6" b="0.0" showDaughters="true" visible="false"/> -->
+        <!-- <vis name="VTXSensitiveVis" alpha="1.0" r="0.08" g="0.75" b="0.08" showDaughters="true" visible="false"/> -->
+        <!-- <vis name="VTXCopperVis" alpha="1.0" r="0.0" g="0.0" b="0.0" showDaughters="true" visible="false"/> -->
+        <!-- <vis name="VTXHDIVis" alpha="1.0" r="1.000" g="0.500" b="0.000" showDaughters="true" visible="false"/> -->
+        <!-- <vis name="VTXFlexVis" alpha="1.0" r="1.000" g="0.000" b="1.000" showDaughters="true" visible="false"/> -->
+        <!-- <vis name="VTXSupportPlateVis" alpha="1.0" r="0.41" g="0.51" b="0.59" showDaughters="true" visible="false"/> -->
+        <!-- <vis name="VTXConnectorVis" alpha="1.0" r="0.0" g="0.0" b="0.0" showDaughters="true" visible="false"/> -->
+
+        <vis name="VTXCoolingPipeVis"       alpha="1.0" r="1.0" g="1.0" b="1.0" showDaughters="true" visible="true"/>
+        <vis name="VTXCoolingFluidVis"        alpha="1.0" r="0.0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
+        <vis name="VTXPeripheryVis" alpha="1.0" r="0.0" g="0.6" b="0.0" showDaughters="true" visible="true"/>
+        <vis name="VTXSensitiveVis" alpha="1.0" r="0.08" g="0.75" b="0.08" showDaughters="true" visible="true"/>
+        <vis name="VTXCopperVis" alpha="1.0" r="0.0" g="0.0" b="0.0" showDaughters="true" visible="true"/>
+        <vis name="VTXHDIVis" alpha="1.0" r="1.000" g="0.500" b="0.000" showDaughters="true" visible="true"/>
+        <vis name="VTXFlexVis" alpha="1.0" r="1.000" g="0.000" b="1.000" showDaughters="true" visible="true"/>
+        <vis name="VTXSupportPlateVis" alpha="1.0" r="0.41" g="0.51" b="0.59" showDaughters="true" visible="true"/>
+        <vis name="VTXConnectorVis" alpha="1.0" r="0.0" g="0.0" b="0.0" showDaughters="true" visible="true"/>
+
+
+    </display>
+
+
+    <comment> Barrel parameters </comment>
+    <define>
+        <constant name="DetID_VTX_Barrel"   value="2"/>   
+        <constant name="VTX_inner_radius"   value="5*mm"/>   
+        <constant name="VTX_outer_radius"   value="50*mm"/>
+        <constant name="VTX_nGroupingModules" value="1"/> 
+    </define>
+
+    <comment> Sensor parameters </comment>
+    <define>
+
+        <constant name="VTX_l1RSU_rphi"    value="20.75*mm"/> <comment> RSU params listed here correspond to "Excel sheet" assumptions, only including sensitive area + readout periphery / dicing lane </comment>
+        <constant name="VTX_l1RSU_rphi_periphery"    value="0.275*mm"/>
+        <constant name="VTX_l1RSU_rphi_sensitive"    value="VTX_l1RSU_rphi - VTX_l1RSU_rphi_periphery"/>
+        <constant name="VTX_l1RSU_z"    value="23.1*mm"/>
+
+        <constant name="VTX_RSU_rphi"    value="19.05*mm"/> <comment> RSU params listed here correspond to "Excel sheet" assumptions, only including sensitive area + readout periphery / dicing lane </comment>
+        <constant name="VTX_RSU_rphi_periphery"    value="0.275*mm"/>
+        <constant name="VTX_RSU_rphi_sensitive"    value="VTX_RSU_rphi - VTX_RSU_rphi_periphery"/>
+        <constant name="VTX_RSU_z"    value="21.2*mm"/>
+
+
+    </define>
+
+    <comment> Passive volumes </comment>
+
+
+    <comment> Vertex constants </comment>
+    <define> 
+
+        <constant name="VTX_Sensor_thickness" value="0.05*mm"/>
+        <constant name="VTX_curved_total_sensor_thickness" value="0.05*mm"/>
+
+
+        <constant name="VTX_half_length" value="500*mm"/>
+
+        <constant name="VTX_nRSU_rphi1" value="2"/>
+        <constant name="VTX_nRSU_z1" value="8"/>
+
+        <constant name="VTX_nRSU_rphi2" value="3"/>
+        <constant name="VTX_nRSU_z2" value="12"/>
+
+        <constant name="VTX_nRSU_rphi3" value="4"/>
+        <constant name="VTX_nRSU_z3" value="16"/>
+
+        <constant name="VTX_nRSU_rphi4" value="5"/>
+        <constant name="VTX_nRSU_z4" value="20"/>
+        
+        <constant name="VTX_nRSU_rphi5" value="6"/>
+        <constant name="VTX_nRSU_z5" value="24"/>
+
+        <constant name="VTX_curved_r1" value="(VTX_nRSU_rphi1 * VTX_l1RSU_rphi) / pi"/> 
+        <constant name="VTX_curved_z1" value="400*mm"/>
+        <constant name="VTX_curved_zoffset1" value="0.*mm"/>
+
+        <constant name="VTX_curved_r2" value="(VTX_nRSU_rphi2 * VTX_RSU_rphi) / pi"/> 
+        <constant name="VTX_curved_z2" value="400*mm"/>
+
+        <constant name="VTX_curved_r3" value="(VTX_nRSU_rphi3 * VTX_RSU_rphi) / pi"/> 
+        <constant name="VTX_curved_z3" value="400*mm"/>
+
+        <constant name="VTX_curved_r4" value="(VTX_nRSU_rphi4 * VTX_RSU_rphi) / pi"/> 
+        <constant name="VTX_curved_z4" value="400*mm"/>
+
+        <constant name="VTX_curved_r5" value="(VTX_nRSU_rphi5 * VTX_RSU_rphi) / pi"/> 
+        <constant name="VTX_curved_z5" value="400*mm"/>
+
+        <constant name="VTX_curved_phi0_1" value="0."/>
+    </define>
+
+
+    <readouts>
+        <readout name="VTXCollection">
+            <id>${GlobalTrackerReadoutID}</id>
+        </readout>
+    </readouts>
+
+    <detectors>
+        <detector name="VTX" type="VertexBarrel_detailed_o1_v03" vis="VTXEnvVis" 
+                  id="DetID_VTX_Barrel" readout="VTXCollection">
+
+            <envelope vis="VTXEnvVis">
+                <shape type="Tube" rmin="VTX_inner_radius" rmax="VTX_outer_radius" 
+                       dz="VTX_half_length" material="Air"/>
+            </envelope>
+
+            <type_flags type="DetType_TRACKER + DetType_PIXEL + DetType_BARREL"/>
+
+
+            <stave name="VTXStave1Curved" r="VTX_curved_r1" length="2.*VTX_curved_z1">
+
+                <sensor name="VTXSensor" thickness="VTX_Sensor_thickness" nx="VTX_nRSU_rphi1" material="Silicon">
+                    <include ref="Vertex_l1RSU.xml"/>
+                </sensor>
+
+                <!-- <sensor name="sensor" thickness="VTX_curved_total_sensor_thickness" nx="2" material="Silicon"> -->
+                <!--     <include ref="Vertex_curvedUltraLight_module.xml"/> -->
+                <!-- </sensor> -->
+
+
+            </stave>
+
+            <stave name="VTXStave2Curved" r="VTX_curved_r2" length="2.*VTX_curved_z1">
+
+                <sensor name="VTXSensor" thickness="VTX_Sensor_thickness" nx="VTX_nRSU_rphi2" material="Silicon">
+                    <include ref="Vertex_RSU.xml"/>
+                </sensor>
+
+            </stave>
+
+            <stave name="VTXStave3Curved" r="VTX_curved_r3" length="2.*VTX_curved_z1">
+                <sensor name="VTXSensor" thickness="VTX_Sensor_thickness" nx="VTX_nRSU_rphi3" material="Silicon">
+                    <include ref="Vertex_RSU.xml"/>
+                </sensor>
+            </stave>
+
+            <stave name="VTXStave4Curved" r="VTX_curved_r4" length="2.*VTX_curved_z1">
+                <sensor name="VTXSensor" thickness="VTX_Sensor_thickness" nx="VTX_nRSU_rphi4" material="Silicon">
+                    <include ref="Vertex_RSU.xml"/>
+                </sensor>
+            </stave>
+
+            <stave name="VTXStave5Curved" r="VTX_curved_r5" length="2.*VTX_curved_z1">
+                <sensor name="VTXSensor" thickness="VTX_Sensor_thickness" nx="VTX_nRSU_rphi5" material="Silicon">
+                    <include ref="Vertex_RSU.xml"/>
+                </sensor>
+            </stave>
+
+                   <!-- phi0="0.5*VTX_RSU_rphi/(1*pi*VTX_curved_r1)*360.*deg+90.*deg+VTX_curved_phi0_1"  -->
+
+            <comment> Layer VTX 1 </comment>
+            <layer id="0" 
+                   nLadders="2" 
+                   phi0="0." 
+                   r="VTX_curved_r1" 
+                   nmodules="VTX_nRSU_z1" 
+                   name="VTXStave1Curved" 
+                   step="0.0*mm" 
+                   z_offset="VTX_curved_zoffset1"/>
+
+                   <!-- motherVolThickness="0.05*mm"         -->
+                   <!-- motherVolLength="VTX_curved_z1_passive"  -->
+
+            <comment> Layer VTX 2 </comment>
+            <layer id="1" 
+                   nLadders="2" 
+                   phi0="0." 
+                   r="VTX_curved_r2" 
+                   nmodules="VTX_nRSU_z2" 
+                   name="VTXStave2Curved" 
+                   step="0.0*mm" 
+                   z_offset="VTX_curved_zoffset1"/>
+
+            <comment> Layer VTX 3 </comment>
+            <layer id="2" 
+                   nLadders="2" 
+                   phi0="0." 
+                   r="VTX_curved_r3" 
+                   nmodules="VTX_nRSU_z3" 
+                   name="VTXStave3Curved" 
+                   step="0.0*mm" 
+                   z_offset="VTX_curved_zoffset1"/>
+
+            <comment> Layer VTX 4 </comment>
+            <layer id="3" 
+                   nLadders="2" 
+                   phi0="0." 
+                   r="VTX_curved_r4" 
+                   nmodules="VTX_nRSU_z4" 
+                   name="VTXStave4Curved" 
+                   step="0.0*mm" 
+                   z_offset="VTX_curved_zoffset1"/>
+
+            <comment> Layer VTX 5 </comment>
+            <layer id="4" 
+                   nLadders="2" 
+                   phi0="0." 
+                   r="VTX_curved_r5" 
+                   nmodules="VTX_nRSU_z5" 
+                   name="VTXStave5Curved" 
+                   step="0.0*mm" 
+                   z_offset="VTX_curved_zoffset1"/>
+
+        </detector>
+    </detectors>
+
+
+
+
+</lccdd>
