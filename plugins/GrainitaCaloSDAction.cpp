@@ -22,7 +22,6 @@
  */
 
 #include "GrainitaCaloSDAction.h"
-//#include "detectorSegmentations/FCCSWModularGridRhoPhiTheta_k4geo.h"
 #include "detectorSegmentations/FCCSWGridPhiTheta_k4geo.h"
 #include "DD4hep/Segmentations.h"
 #include "DDG4/Factories.h"
@@ -54,14 +53,15 @@ namespace sim {
     declareProperty("CollectionName", m_collectionName);
     declareProperty("RawCollectionName", m_userData.rawCollectionName);
     declareProperty("useLightResponseFunction", m_userData.useLightResponseFunction);
-    declareProperty("responseFuncSlope", m_userData.slope);
-    declareProperty("responseFuncIntersect", m_userData.intersect);
-    declareProperty("responseFuncX0", m_userData.x0);
-    declareProperty("responseFuncAttLength", m_userData.AttLength);
-    declareProperty("responseFuncNorm", m_userData.norm);
+    declareProperty("responseFuncX0", m_userData.responseX0);
+    declareProperty("responseFuncFraction", m_userData.responseFraction);
+    declareProperty("responseFuncAttLength1", m_userData.responseAttLength1);
+    declareProperty("responseFuncAttLength2", m_userData.responseAttLength2);
     declareProperty("neighborCellSize", m_userData.neighborCellSize);
     declareProperty("fiberAttenuationLength", m_userData.fiberAttenuationLength);
-    declareProperty("outerRadius", m_userData.outerRadius);
+    declareProperty("fiberLength", m_userData.fiberLength);
+    declareProperty("innerRadius", m_userData.innerRadius);
+    declareProperty("fiberReflection", m_userData.fiberReflection);
 
 
     InstanceCount::increment(this);
@@ -126,7 +126,6 @@ namespace sim {
     // auto decoder = m_sensitive.readout().idSpec().decoder();
     auto decoder = m_segmentation->decoder();
     auto VolID = volumeID(aStep);
-    m_userData.norm = 1. / std::exp(-1. * m_userData.x0 / m_userData.AttLength);
 
 
 #ifdef DEBUG
@@ -290,12 +289,11 @@ namespace sim {
     // Create the hits and accumulate contributions from multiple steps
     //
     Geant4HitCollection* coll = collection(m_collectionID);
+    const G4double longitudinalAttenuation = m_userData.useLightResponseFunction
+                                                 ? m_userData.longitudinalResponse(global.mag(), global.theta())
+                                                 : 1.;
     for (std::size_t i = 0; i < cellIDvec.size(); ++i) {
       const CellID hitCellID = cellIDvec[i];
-      G4double longitudinalAttenuation = 1.;
-      if (m_userData.fiberAttenuationLength > 0. && m_userData.useLightResponseFunction) {
-        longitudinalAttenuation = std::exp(-(m_userData.outerRadius-global.perp()) / m_userData.fiberAttenuationLength);
-      }
       // std::cout<<"  Response for cell "<<cellIDvec[i]<<": "<<responseVec[i]<<" / "<<longitudinalAttenuation<<std::endl;
 
       const G4double step_E = responseVec[i] * longitudinalAttenuation * aStep->GetTotalEnergyDeposit();
