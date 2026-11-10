@@ -19,34 +19,26 @@
     version="0.1">
   </info> -->
 
+  <!-- All geometry parameters are attributes of the <detector> element, read by the driver.
+       Only the values that the readout segmentation (or the endcap) also needs are global constants,
+       prefixed with EcalBarrel_ to avoid name clashes with other sub-detectors; the
+       segmentation cannot refer to detector attributes. -->
   <define>
-
-    <!-- Global structure -->
-    <constant name="InnerRadius"          value="ECalBarrel_inner_radius"/>
-    <constant name="OuterRadius"          value="ECalBarrel_outer_radius"/>
-    <constant name="CrystalThickness"     value="40.5*cm"/>
-    <constant name="BackSpace"            value="1.8*cm"/>
-    <constant name="HalfZ"                value="ECalBarrel_half_length"/>
-    <constant name="NumberOfPhiSectors"   value="72"/>
-    <constant name="NumberOfZModules"     value="15"/>
-
-    <!-- Module -->
-    <constant name="FrameThickness"       value="10*mm"/>
-    <constant name="SegThickness"         value="2.5*mm"/>
-    <constant name="ModuleTiltAngle"      value="1.5*deg"/>
+    <constant name="EcalBarrel_CrystalThickness"    value="40.5*cm"/>
+    <constant name="EcalBarrel_FrameThickness"      value="10*mm"/>
+    <!-- Module tilt angle (phi and theta), shared with the endcap so that their phi sectors stay aligned -->
+    <constant name="EcalBarrel_ModuleTiltAngle"     value="1.5*deg"/>
 
     <!-- Cell -->
     <!-- Segmentation to achieve readout granularity of 7 mm in front of ECAL barrel surface.
     It corresponds to AngularGranularity = 3.2 mrad
     Two longitudinal segmentations are achieved from short-long fiber structure.  -->
-    <constant name="AngularGranularity"   value="3.2*mrad"/>   
-    <constant name="rho0"                 value="FrameThickness"/>   
-    <constant name="rho1"                 value="FrameThickness + CrystalThickness/5"/>   
-    <constant name="rho2"                 value="FrameThickness + CrystalThickness+10*mm"/>   
-
-
+    <constant name="EcalBarrel_AngularGranularity"  value="3.2*mrad"/>
+    <constant name="EcalBarrel_rho0"                value="EcalBarrel_FrameThickness"/>
+    <constant name="EcalBarrel_rho1"                value="EcalBarrel_FrameThickness + EcalBarrel_CrystalThickness/5"/>
+    <constant name="EcalBarrel_rho2"                value="EcalBarrel_FrameThickness + EcalBarrel_CrystalThickness+10*mm"/>
   </define>
-  
+
 
   <!-- Define the detector. A detector has a name, type to be returned in .cpp file with 
        DECLARE_DETELEMENT(type,create_detector_c++method), vis attributes (optional),
@@ -54,8 +46,24 @@
        If a detector contains sub-detectors, their information must be included as below.
   -->
   <detectors>
-    <detector name="Grainita_ECAL_Barrel_v02" type="Grainita_ECAL_Barrel_v02" vis="CaloVis" id ="10" readout="GrainitaEcalBarrelRO" material="MixGrains">
-    <type_flags type=" DetType_CALORIMETER + DetType_ELECTROMAGNETIC + DetType_BARREL"/>
+    <detector name="Grainita_ECAL_Barrel_v02" type="Grainita_ECAL_Barrel_v02" vis="CaloVis" id ="DetID_ECAL_Barrel" readout="GrainitaEcalBarrelRO" material="MixGrains">
+      <type_flags type=" DetType_CALORIMETER + DetType_ELECTROMAGNETIC + DetType_BARREL"/>
+
+      <!-- rmin: inner radius, rmax: maximum allowed outer radius, zhalf: inner half length,
+           nphi: number of phi sectors, nz: number of modules along z (theta) -->
+      <dimensions rmin="ECalBarrel_inner_radius" rmax="ECalBarrel_outer_radius" zhalf="ECalBarrel_half_length"
+                  nphi="72" nz="15"/>
+
+      <!-- Tilt angle in phi and theta (the two barrel end walls are not tilted) -->
+      <tilt angle="EcalBarrel_ModuleTiltAngle"/>
+
+      <!-- Crystal thickness (radial) and space behind the modules inside the sector -->
+      <crystal thickness="EcalBarrel_CrystalThickness"/>
+      <backspace thickness="1.8*cm"/>
+
+      <!-- Carbon fiber: inner/outer support frame and module walls -->
+      <frame thickness="EcalBarrel_FrameThickness"/>
+      <wall thickness="2.5*mm"/>
     </detector>
   </detectors>
 
@@ -63,14 +71,14 @@
   <readouts>
     <readout name="GrainitaEcalBarrelRO">
       <segmentation type="FCCSWGridRhoPhiTheta_k4geo"
-              phi_bins="2*pi/AngularGranularity"
-              grid_size_theta="AngularGranularity"
-              rho_bins="rho0 rho1 rho2"
+              phi_bins="2*pi/EcalBarrel_AngularGranularity"
+              grid_size_theta="EcalBarrel_AngularGranularity"
+              rho_bins="EcalBarrel_rho0 EcalBarrel_rho1 EcalBarrel_rho2"
               rho_bin_count="2"
-              min_theta="atan((InnerRadius+FrameThickness)/HalfZ)-ModuleTiltAngle"
-              max_theta="pi-atan((InnerRadius+FrameThickness)/HalfZ)+ModuleTiltAngle"
+              min_theta="atan((ECalBarrel_inner_radius+EcalBarrel_FrameThickness)/ECalBarrel_half_length)"
+              max_theta="pi-atan((ECalBarrel_inner_radius+EcalBarrel_FrameThickness)/ECalBarrel_half_length)"
               clear_extra_fields="1"
-              offset_R="InnerRadius"/>
+              offset_R="ECalBarrel_inner_radius"/>
       <id>system:5,stave:6,sector:7,phi:-16,theta:16,rho:5</id>
     </readout>
   </readouts> 
