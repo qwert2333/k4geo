@@ -1,47 +1,35 @@
 <lccdd>
-  <!-- Grainita ECAL endcaps (development version).
-       Each endcap (+z and -z) is: front carbon plate / sector layer (crystal modules + back space) / back carbon plate.
-       The crystal layer is divided into nphi sectors in phi, each divided into ntheta modules in theta
-       (barrel-like construction, with tilt). A module is a carbon frame with the crystal inside.
-       All geometry parameters are attributes of the <detector> element, read by the driver; the values
-       may refer to global constants (e.g. DectDimensions). Only add <define> constants for values that a
-       readout segmentation needs, since segmentation parameters cannot refer to detector attributes.
+<!-- #==========================================================================
+     #  AIDA Detector description implementation
+     #==========================================================================
+     # Copyright (C) Organisation europeenne pour la Recherche nucleaire (CERN)
+     # All rights reserved.
+     #
+     # For the licensing terms see $DD4hepINSTALL/LICENSE.
+     # For the list of contributors see $DD4hepINSTALL/doc/CREDITS.
+     #
+     #==========================================================================
 
-       Conventions:
-         - All radii follow the TGeoPgon convention: distance from the z axis to the flat face.
-         - "front" is the face closer to the IP, "back" the face further away.
-         - zmin is the |z| of the front face of the front plate.
-         - Sector depth along z = crystal thickness + back space (as the barrel). The front rmin is at the
-           sector front face (crystal front), the back rmin at the sector back face (next to the back plate).
-         - Outer boundary: IP-pointing cone theta_out = atan(front rmax / zmin), i.e. front rmax is the outer
-           radius at zmin; the outer radii of the plates and of the sector faces follow from it (not tilted).
-         - Theta range: from min(atan(rmin_front/z_front), atan(rmin_back/z_back)) to theta_out,
-           with z_front / z_back the |z| of the sector front / back faces; divided equally into ntheta.
-         - Inner boundary follows the given radii (not forced to point to the IP).
-         - Tilt (same angle and construction as the barrel, not tilted if <tilt> is absent):
-             phi:   inner sector vertices on the regular polygon at min(rmin), outer vertices rotated by +angle
-                    at the corner radius of max(rmax); side walls are planes parallel to z, shared by neighbours.
-             theta: internal theta walls go from the IP ray theta_i at the sector front face to the IP ray
-                    (theta_i - angle) at the sector back face, i.e. tilted towards larger |cos(theta)|.
-           With angle = 0 the side walls are radial and the internal theta walls point to the IP.
-         - Module length along z: innermost module (inner face parallel to z): the crystal thickness;
-           other modules: every ray from the IP crossing the module has a crystal path >= crystal thickness
-           (as the barrel), i.e. h = thickness * cos(smallest IP angle inside the module).
-  -->
+    name="Grainita_ECAL_Barrel_v02"
+    title="Grainita ECAL barrel geometry"
+    author="Fangyi Guo"
+    url="None"
+    status="development"
+    version="0.2">
+-->
 
-  <!-- Global constants only for the values that the readout segmentation also needs (prefixed with EcalEndcap_);
-       the detector element refers to the same constants so that geometry and readout stay consistent. -->
+  <!-- Global parameters -->
   <define>
     <constant name="EcalEndcap_CrystalThickness"    value="40.5*cm"/>
     <constant name="EcalEndcap_PlateThickness"      value="10*mm"/>
     <constant name="EcalEndcap_BackSpace"           value="1.8*cm"/>
 
-    <!-- Cell: same angular granularity as the barrel. Depth (rho) is measured along the IP ray from the
-         front face of the front plate (|z| = ECalEndcaps_half_length), as the barrel from its inner frame face. -->
+    <!-- Cell: same angular granularity as the barrel. -->
     <constant name="EcalEndcap_AngularGranularity"  value="EcalBarrel_AngularGranularity"/>
     <constant name="EcalEndcap_rho0"                value="EcalEndcap_PlateThickness"/>
     <constant name="EcalEndcap_rho1"                value="EcalEndcap_PlateThickness + EcalEndcap_CrystalThickness/5"/>
     <constant name="EcalEndcap_rho2"                value="EcalEndcap_PlateThickness + EcalEndcap_CrystalThickness+10*mm"/>
+
     <!-- Physical theta coverage of the +z endcap (mirrored for -z by the segmentation in endcap mode),
          same formulas as the driver -->
     <constant name="EcalEndcap_ThetaMin"            value="min(atan(ECalEndcaps_front_inner_radius/(ECalEndcaps_half_length+EcalEndcap_PlateThickness)), atan(ECalEndcaps_back_inner_radius/(ECalEndcaps_half_length+EcalEndcap_PlateThickness+EcalEndcap_CrystalThickness+EcalEndcap_BackSpace)))"/>
@@ -51,41 +39,32 @@
   <detectors>
     <detector name="Grainita_ECAL_Endcaps_v02" type="Grainita_ECAL_Endcaps_v02" vis="CaloVis" id="DetID_ECAL_Endcap" readout="GrainitaEcalEndcapRO">
       <type_flags type="DetType_CALORIMETER + DetType_ELECTROMAGNETIC + DetType_ENDCAP"/>
-
-      <!-- nphi: number of phi sectors, ntheta: number of theta modules per sector -->
       <dimensions zmin="ECalEndcaps_half_length" nphi="72" ntheta="6"/>
-
-      <!-- Tilt angle in phi and theta. Uses the barrel constant so that barrel and endcap sectors stay
-           aligned in phi (requires the barrel compact file to be included before this file). -->
       <tilt angle="EcalBarrel_ModuleTiltAngle"/>
 
-      <!-- Crystal layer: thickness along z; inner radii at the sector front and back faces;
-           front rmax = outer radius at zmin, defining the IP-pointing outer cone -->
+      <!-- Crystal -->
       <crystal material="MixGrains" thickness="EcalEndcap_CrystalThickness" vis="SensitiveVis">
         <front rmin="ECalEndcaps_front_inner_radius" rmax="ECalEndcaps_front_outer_radius"/>
         <back  rmin="ECalEndcaps_back_inner_radius"/>
       </crystal>
 
-      <!-- Space behind the modules inside the sector (as the barrel BackSpace) -->
+       <!-- Backspace: air. To be replaced with FEE, etc. -->
       <backspace thickness="EcalEndcap_BackSpace"/>
-
-      <!-- Carbon fiber module walls: thickness measured normal to each of the four side faces
-           (front/back faces of the module have no wall) -->
       <wall material="CarbonFiber" thickness="2.5*mm" vis="CarbonFrameVis"/>
 
-      <!-- Carbon fiber plates on the front and back faces (PolyhedraRegular, inner radius of the adjacent sector face, outer radius on the outer cone at the plate face closer to the IP) -->
       <plate material="CarbonFiber" thickness="EcalEndcap_PlateThickness" vis="CarbonFrameVis"/>
+
     </detector>
   </detectors>
 
 
-  <!-- Same segmentation as the barrel, in endcap mode (offset_Z > 0): rho is measured from the plane
-       |z| = offset_Z and the theta coverage [min_theta, max_theta] of +z is mirrored for -z.
-       The volume IDs of the endcap need the extra "side" field (+1 / -1). -->
+  <!-- Same segmentation as the barrel, in endcap mode (offset_Z > 0)
+       scale_phi_bins_with_sin_theta="1": phi bin number varies with theta, to keep similar cell size. -->
   <readouts>
     <readout name="GrainitaEcalEndcapRO">
       <segmentation type="FCCSWGridRhoPhiTheta_k4geo"
               phi_bins="2*pi/EcalEndcap_AngularGranularity"
+              scale_phi_bins_with_sin_theta="1"
               grid_size_theta="EcalEndcap_AngularGranularity"
               rho_bins="EcalEndcap_rho0 EcalEndcap_rho1 EcalEndcap_rho2"
               rho_bin_count="2"
