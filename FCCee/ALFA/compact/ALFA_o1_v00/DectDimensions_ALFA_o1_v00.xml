@@ -22,8 +22,29 @@
     <constant name="ECalBarrel_outer_radius" value="2650*mm"/>
     <constant name="ECalBarrel_half_length" value="2300*mm"/>
 
-    <constant name="Solenoid_coil_half_length"      value="2.0*m"/>
-    <constant name="Solenoid_coil_outer_radius"      value="2.7*m"/>
+    <constant name="Barrel_Endcap_gap" value="100*mm"/>
+    <constant name="ECalEndcaps_front_inner_radius" value="400*mm"/>
+    <constant name="ECalEndcaps_back_inner_radius" value="400*mm"/>
+    <constant name="ECalEndcaps_front_outer_radius" value="ECalBarrel_inner_radius"/>
+    <constant name="ECalEndcaps_back_outer_radius" value="ECalBarrel_outer_radius"/>  
+    <constant name="ECalEndcaps_half_length" value="ECalBarrel_half_length+Barrel_Endcap_gap"/>
+
+    <constant name="Solenoid_inner_radius" value="2700*mm"/>
+    <constant name="Solenoid_outer_radius" value="3000*mm"/>
+    <constant name="Solenoid_half_length" value="2920*mm"/>
+    <constant name="Solenoid_coil_radius" value="(Solenoid_inner_radius+Solenoid_outer_radius)/2."/>
+    <constant name="Solenoid_coil_half_length" value="2850*mm"/>
+
+    <constant name="HCalBarrel_inner_radius" value="3020*mm"/>
+    <constant name="HCalBarrel_outer_radius" value="4920*mm"/>
+    <constant name="HCalBarrel_half_length" value="2920*mm"/>
+    <constant name="HCalBarrel_symmetry" value="12"/>
+
+    <constant name="HCalEndcap_inner_radius" value="400*mm"/>
+    <constant name="HCalEndcap_outer_radius" value="HCalBarrel_outer_radius"/>
+    <constant name="HCalEndcap_min_z" value="HCalBarrel_half_length+100*mm"/>
+    <constant name="HCalEndcap_max_z" value="HCalBarrel_half_length+100*mm+2680*mm"/>
+    <constant name="HCalEndcap_symmetry" value="12"/>
 
   </define>
 

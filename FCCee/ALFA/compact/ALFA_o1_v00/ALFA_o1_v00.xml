@@ -20,6 +20,12 @@
     <gdmlFile  ref="materials.xml"/>
   </includes>
 
+<limits>
+      <limitset name="cal_limits">
+          <limit name="step_length_max" particles="*" value="1.0" unit="mm" />
+      </limitset>
+  </limits>
+
   <comment> World dimensions </comment>
   <define>
     <constant name="world_side"   value="20.0*m"/>
@@ -52,6 +58,15 @@
 
   <comment> Grainita ECAL </comment>
   <include ref="Grainita_ECAL_Barrel_o1_v02.xml" /> 
+  <include ref="Grainita_ECAL_Endcaps_o1_v02.xml" /> 
+
+
+  <comment> Barrel solenoid </comment>
+  <include ref="Solenoid_o1_v01_02.xml" />
+
+  <comment> Tile HCAL from CLD_o2_v08 </comment>
+  <include ref="HCalBarrel_o1_v01_01.xml" /> 
+  <include ref="HCalEndcap_o1_v01_01.xml" />
 
   <comment> Include plugin to generate edm4hep::TrackerHitPlane </comment>
   <plugins>
@@ -61,7 +76,7 @@
 
   <comment> Magnetic field constants </comment>
   <define>
-    <constant name="Solenoid_inner_field"   value="3.0*tesla"/>
+    <constant name="Solenoid_inner_field"   value="2.0*tesla"/>
     <constant name="Solenoid_outer_field"   value="-1.0*tesla"/>
   </define>
 
@@ -72,7 +87,7 @@
       inner_field="Solenoid_inner_field"
       outer_field="Solenoid_outer_field"
       zmax="1.2 * Solenoid_coil_half_length"
-      outer_radius="Solenoid_coil_outer_radius">
+      outer_radius="Solenoid_outer_radius">
     </field>
   </fields>
 

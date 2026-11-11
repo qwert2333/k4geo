@@ -1,0 +1,79 @@
+<lccdd>
+<!-- #==========================================================================
+     #  AIDA Detector description implementation
+     #==========================================================================
+     # Copyright (C) Organisation europeenne pour la Recherche nucleaire (CERN)
+     # All rights reserved.
+     #
+     # For the licensing terms see $DD4hepINSTALL/LICENSE.
+     # For the list of contributors see $DD4hepINSTALL/doc/CREDITS.
+     #
+     #==========================================================================
+
+    name="Grainita_ECAL_Barrel_v02"
+    title="Grainita ECAL barrel geometry"
+    author="Fangyi Guo"
+    url="None"
+    status="development"
+    version="0.2">
+-->
+
+  <!-- Global parameters -->
+  <define>
+    <constant name="EcalEndcap_CrystalThickness"    value="40.5*cm"/>
+    <constant name="EcalEndcap_PlateThickness"      value="10*mm"/>
+    <constant name="EcalEndcap_BackSpace"           value="1.8*cm"/>
+
+    <!-- Cell: same angular granularity as the barrel. -->
+    <constant name="EcalEndcap_AngularGranularity"  value="EcalBarrel_AngularGranularity"/>
+    <constant name="EcalEndcap_rho0"                value="EcalEndcap_PlateThickness"/>
+    <constant name="EcalEndcap_rho1"                value="EcalEndcap_PlateThickness + EcalEndcap_CrystalThickness/5"/>
+    <constant name="EcalEndcap_rho2"                value="EcalEndcap_PlateThickness + EcalEndcap_CrystalThickness+10*mm"/>
+
+    <!-- Physical theta coverage of the +z endcap (mirrored for -z by the segmentation in endcap mode),
+         same formulas as the driver -->
+    <constant name="EcalEndcap_ThetaMin"            value="min(atan(ECalEndcaps_front_inner_radius/(ECalEndcaps_half_length+EcalEndcap_PlateThickness)), atan(ECalEndcaps_back_inner_radius/(ECalEndcaps_half_length+EcalEndcap_PlateThickness+EcalEndcap_CrystalThickness+EcalEndcap_BackSpace)))"/>
+    <constant name="EcalEndcap_ThetaMax"            value="atan(ECalEndcaps_front_outer_radius/ECalEndcaps_half_length)"/>
+  </define>
+
+  <detectors>
+    <detector name="Grainita_ECAL_Endcaps_v02" type="Grainita_ECAL_Endcaps_v02" vis="CaloVis" id="DetID_ECAL_Endcap" readout="GrainitaEcalEndcapRO">
+      <type_flags type="DetType_CALORIMETER + DetType_ELECTROMAGNETIC + DetType_ENDCAP"/>
+      <dimensions zmin="ECalEndcaps_half_length" nphi="72" ntheta="6"/>
+      <tilt angle="EcalBarrel_ModuleTiltAngle"/>
+
+      <!-- Crystal -->
+      <crystal material="MixGrains" thickness="EcalEndcap_CrystalThickness" vis="SensitiveVis">
+        <front rmin="ECalEndcaps_front_inner_radius" rmax="ECalEndcaps_front_outer_radius"/>
+        <back  rmin="ECalEndcaps_back_inner_radius"/>
+      </crystal>
+
+       <!-- Backspace: air. To be replaced with FEE, etc. -->
+      <backspace thickness="EcalEndcap_BackSpace"/>
+      <wall material="CarbonFiber" thickness="2.5*mm" vis="CarbonFrameVis"/>
+
+      <plate material="CarbonFiber" thickness="EcalEndcap_PlateThickness" vis="CarbonFrameVis"/>
+
+    </detector>
+  </detectors>
+
+
+  <!-- Same segmentation as the barrel, in endcap mode (offset_Z > 0)
+       scale_phi_bins_with_sin_theta="1": phi bin number varies with theta, to keep similar cell size. -->
+  <readouts>
+    <readout name="GrainitaEcalEndcapRO">
+      <segmentation type="FCCSWGridRhoPhiTheta_k4geo"
+              phi_bins="2*pi/EcalEndcap_AngularGranularity"
+              scale_phi_bins_with_sin_theta="1"
+              grid_size_theta="EcalEndcap_AngularGranularity"
+              rho_bins="EcalEndcap_rho0 EcalEndcap_rho1 EcalEndcap_rho2"
+              rho_bin_count="2"
+              min_theta="EcalEndcap_ThetaMin"
+              max_theta="EcalEndcap_ThetaMax"
+              clear_extra_fields="1"
+              offset_Z="ECalEndcaps_half_length"/>
+      <id>system:5,side:-2,stave:6,sector:7,phi:-16,theta:16,rho:5</id>
+    </readout>
+  </readouts>
+
+</lccdd>
