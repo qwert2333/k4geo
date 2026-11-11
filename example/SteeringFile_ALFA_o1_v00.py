@@ -140,7 +140,7 @@ SIM.action.mapActions = {
         {
             "ReadoutName": "GrainitaEcalBarrelRO",
             "CollectionName": "GrainitaCalorimeterHits",
-            "useLightResponseFunction": True,
+            "useLightResponseFunction": False,
             "responseFuncSlope": 0.93,
             "responseFuncIntersect": 0.206,
             "responseFuncX0": 0.856,
@@ -149,7 +149,23 @@ SIM.action.mapActions = {
             "fiberAttenuationLength": 1e7,
             "outerRadius": 2645,
         },
-    )
+    ),
+    "Grainita_ECAL_Endcaps_v02": (
+        "GrainitaCaloSDAction",
+        {
+            "ReadoutName": "GrainitaEcalEndcapRO",
+            "CollectionName": "GrainitaEndcapCalorimeterHits",
+            "RawCollectionName": "GrainitaEndcapCalorimeterHitsRaw",
+            "useLightResponseFunction": False,
+            "responseFuncSlope": 0.93,
+            "responseFuncIntersect": 0.206,
+            "responseFuncX0": 0.856,
+            "responseFuncAttLength": 3.4,
+            "neighborRadius": 3,
+            "fiberAttenuationLength": 1e7,
+            "readoutZ": 2843,
+        },
+    ),
 }
 
 ##  set the default run action

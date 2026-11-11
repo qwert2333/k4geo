@@ -52,9 +52,32 @@ namespace DDSegmentation {
      */
     void neighboursInWindow(const CellID& cellID, std::set<CellID>& neighbours, int rPhi, int rTheta, int rRho) const;
 
-    /// First/last theta bin inside the physical coverage [min_theta, max_theta] (and the theta field range).
+    /// First/last theta bin inside the physical coverage (and the theta field range).
+    /// Barrel mode: [min_theta, max_theta]. Endcap mode (offset_Z > 0): the coverage is
+    /// [min_theta, max_theta] U [pi - max_theta, pi - min_theta]; these return its outer limits,
+    /// use thetaBinInCoverage() to test a bin.
     int firstThetaBin() const;
     int lastThetaBin() const;
+    /// Whether a theta bin is inside the physical coverage (and the theta field range).
+    bool thetaBinInCoverage(int bin) const;
+
+    /** Number of phi bins in the ring of the given theta bin.
+     *  Default: phi_bins for every ring.  With scale_phi_bins_with_sin_theta:
+     *  max(1, round(phi_bins * sin(theta_c))), with theta_c the centre of the theta bin, i.e. phi_bins is the
+     *  number of bins of the ring at theta = 90 deg and the phi cell width rho * sin(theta) * dPhi is about
+     *  rho * 2 pi / phi_bins in every ring.
+     *  offset_phi is the same absolute angle (centre of phi bin 0) in every ring.
+     */
+    int phiBinsInThetaBin(int thetaBin) const;
+    /// Phi cell size in the ring of the given theta bin.
+    inline double gridSizePhiInThetaBin(int thetaBin) const {
+      return 2 * M_PI / static_cast<double>(phiBinsInThetaBin(thetaBin));
+    }
+    /// Azimuthal angle of the cell centre, using the phi grid of the cell's theta ring.
+    /// Hides FCCSWGridPhiTheta_k4geo::phi(), which always uses phi_bins.
+    double phi(const CellID cID) const;
+    /// Cell dimensions (dPhi, dTheta), with dPhi of the cell's theta ring.
+    virtual std::vector<double> cellDimensions(const CellID& cID) const override;
 
     /**  Find neighbours of the cell.
      *   Definition of neighbours is explained on slide 9:
@@ -73,12 +96,18 @@ namespace DDSegmentation {
   protected:
     /// Get rho from cellID
     double rho(const CellID cID) const;
+    /// Distance from the IP, along the direction theta, to the front face of the detector:
+    /// offset_R / sin(theta) for a cylinder (barrel), offset_Z / |cos(theta)| for a plane (endcap, offset_Z > 0).
+    double rhoOffset(double theta) const;
 
   private:
     /// Clear all CellID fields except system, phi, theta and rho when enabled.
     void clearExtraFields(CellID& cellID) const;
-    /// Map a phi bin onto the range [firstPhiBin, firstPhiBin + phiBins() - 1] used for all phi IDs.
-    int wrapPhiBin(int bin) const;
+    /// Map a phi bin onto the range [firstPhiBin, firstPhiBin + nPhi - 1] of a ring with nPhi phi bins.
+    int wrapPhiBin(int bin, int nPhi) const;
+
+    /// theta-dependent number of phi bins (see phiBinsInThetaBin()); false (default) keeps phi_bins everywhere
+    bool m_scalePhiBinsWithSinTheta;
 
     /// the grid size in rho
     double m_grid_rho;
@@ -95,6 +124,8 @@ namespace DDSegmentation {
 
     /// the coordinate offset in rho / R
     double m_offsetR; // In cylinder case: offset depends on R not rho.
+    /// endcap mode (> 0): |z| of the front plane from which rho is measured; 0 (default) = barrel mode with offset_R
+    double m_offsetZ;
 
     /// the field name used for rho
     std::string m_rhoID;

@@ -61,6 +61,7 @@ namespace sim {
     declareProperty("neighborRadius", m_userData.neighborRadius);
     declareProperty("fiberAttenuationLength", m_userData.fiberAttenuationLength);
     declareProperty("outerRadius", m_userData.outerRadius);
+    declareProperty("readoutZ", m_userData.readoutZ);
 
     InstanceCount::increment(this);
 
@@ -87,8 +88,12 @@ namespace sim {
              m_segmentation.type().c_str());
     if (m_userData.neighborRadius < 0)
       except("neighborRadius must be non-negative, got %d.", m_userData.neighborRadius);
+    if (m_userData.readoutZ < 0.)
+      except("readoutZ must be >= 0 (0: barrel mode with outerRadius), got %g.", m_userData.readoutZ);
 
-    m_collectionID = defineCollection<Geant4Calorimeter::Hit>(m_collectionName);
+    // Only register the hit collection when light response model is turned on. 
+    if (m_userData.useLightResponseFunction)
+      m_collectionID = defineCollection<Geant4Calorimeter::Hit>(m_collectionName);
     m_userData.rawCollectionID = defineCollection<Geant4Calorimeter::Hit>(m_userData.rawCollectionName);
   }
 
@@ -166,6 +171,10 @@ namespace sim {
     rawContrib.z = global.z();
     rawHit->truth.emplace_back(rawContrib);
 
+    // No light response model: only the raw collection exists (see defineCollections()).
+    if (!m_userData.useLightResponseFunction)
+      return true;
+
     std::vector<CellID> cellIDvec;
     std::vector<G4ThreeVector> cellPosVec;
     std::vector<G4double> responseVec;
@@ -180,13 +189,11 @@ namespace sim {
 
     // The hit cell must stay first: only it receives the truth contribution below.
     addCell(cellID);
-    if (m_userData.useLightResponseFunction) {
-      std::set<CellID> neighbourIDs;
-      m_userData.segmentation->neighboursInWindow(cellID, neighbourIDs, m_userData.neighborRadius,
-                                                  m_userData.neighborRadius, 0);
-      for (const CellID id : neighbourIDs)
-        addCell(id);
-    }
+    std::set<CellID> neighbourIDs;
+    m_userData.segmentation->neighboursInWindow(cellID, neighbourIDs, m_userData.neighborRadius,
+                                                m_userData.neighborRadius, 0);
+    for (const CellID id : neighbourIDs)
+      addCell(id);
 
     // Note: keep cell id for future development: modular segmentation.
     auto transverseDistance = [&]([[maybe_unused]] CellID id, const G4ThreeVector& cellPos) {
@@ -205,14 +212,11 @@ namespace sim {
 
     responseVec.reserve(cellIDvec.size());
     for (std::size_t i = 0; i < cellIDvec.size(); ++i) {
-      if (m_userData.useLightResponseFunction) {
-        double distance = transverseDistance(cellIDvec[i], cellPosVec[i]);
-        double response = m_userData.lightResponse(distance);
-        // std::cout<<"  Response for cell "<<cellIDvec[i]<<": distance: "<<distance<<", response:
-        // "<<response<<std::endl; std::cout<<std::endl;
-        responseVec.push_back(response);
-      } else
-        responseVec.push_back(1.);
+      double distance = transverseDistance(cellIDvec[i], cellPosVec[i]);
+      double response = m_userData.lightResponse(distance);
+      // std::cout<<"  Response for cell "<<cellIDvec[i]<<": distance: "<<distance<<", response:
+      // "<<response<<std::endl; std::cout<<std::endl;
+      responseVec.push_back(response);
     }
 
     // //Normalize the response in fibers
@@ -251,14 +255,17 @@ namespace sim {
 
     // Create the hits and accumulate contributions from multiple steps
     //
+    // Longitudinal attenuation along the IP-pointing fiber from the hit to the readout surface
+    // (cylinder R = outerRadius for the barrel, plane |z| = readoutZ for the endcap); same for all cells of this step.
+    G4double longitudinalAttenuation = 1.;
+    if (m_userData.fiberAttenuationLength > 0.) {
+      const G4double fiberLength = m_userData.fiberLength(global.perp(), std::fabs(global.z()), global.mag());
+      longitudinalAttenuation = std::exp(-fiberLength / m_userData.fiberAttenuationLength);
+    }
+
     Geant4HitCollection* coll = collection(m_collectionID);
     for (std::size_t i = 0; i < cellIDvec.size(); ++i) {
       const CellID hitCellID = cellIDvec[i];
-      G4double longitudinalAttenuation = 1.;
-      if (m_userData.fiberAttenuationLength > 0. && m_userData.useLightResponseFunction) {
-        longitudinalAttenuation =
-            std::exp(-(m_userData.outerRadius - global.perp()) / m_userData.fiberAttenuationLength);
-      }
       // std::cout<<"  Response for cell "<<cellIDvec[i]<<": "<<responseVec[i]<<" /
       // "<<longitudinalAttenuation<<std::endl;
 
@@ -282,7 +289,6 @@ namespace sim {
         contrib.trackID = aStep->GetTrack()->GetTrackID();
         contrib.pdgID = aStep->GetTrack()->GetParticleDefinition()->GetPDGEncoding();
         contrib.deposit = step_E;
-        // contrib.deposit = step_E;
         contrib.time = aStep->GetPreStepPoint()->GetGlobalTime();
         contrib.x = global.x();
         contrib.y = global.y();

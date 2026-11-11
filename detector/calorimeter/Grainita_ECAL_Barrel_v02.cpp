@@ -11,6 +11,7 @@
 #include "DDRec/DetectorData.h"
 #include "DDRec/Vector3D.h"
 #include "XML/Utilities.h"
+#include "detectorSegmentations/FCCSWGridPhiTheta_k4geo.h"
 #include <DD4hep/DetFactoryHelper.h>
 
 using namespace dd4hep;
@@ -28,28 +29,33 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
   std::string det_name = x_det.nameStr();
   std::cout << "--> Going to create " << det_name << ", with ID: " << x_det.id() << std::endl;
 
-  // Define readout
-  Readout readout = sens.readout();
-  Segmentation seg = readout.segmentation();
-  const auto cell_size = seg.segmentation()->cellDimensions(0);
+  // Define readout: angular grid of the phi-theta segmentation, for the cell sizes of LayeredCalorimeterData
+  const auto* grid =
+      dynamic_cast<const DDSegmentation::FCCSWGridPhiTheta_k4geo*>(sens.readout().segmentation().segmentation());
+  if (!grid)
+    dd4hep::except("Grainita_ECAL_Barrel_v02", "Readout segmentation must derive from FCCSWGridPhiTheta_k4geo");
 
   // Define material
   Material air(description.material("Air"));
   Material MatCarbonfiber(description.material("CarbonFiber"));
   Material MatCrystal(description.material(x_det.attr<std::string>(_U(material))));
 
-  // Detector global size
-  auto innerR = description.constant<double>("InnerRadius");
-  auto outerR_ref = description.constant<double>("OuterRadius");
-  auto crystal_thick = description.constant<double>("CrystalThickness");
-  auto back_space = description.constant<double>("BackSpace");
-  auto halfZ = description.constant<double>("HalfZ");
-  auto nSec_phi = description.constant<int>("NumberOfPhiSectors");
-  auto nModule_z = description.constant<int>("NumberOfZModules");
+  // Detector global size, read from the <detector> element (no global constants):
+  //   <dimensions rmin rmax zhalf nphi nz/>   rmin: inner radius, rmax: maximum allowed outer radius,
+  //                                           zhalf: inner half length, nphi / nz: phi sectors / z modules
+  //   <crystal thickness/> <backspace thickness/> <frame thickness/> <wall thickness/> <tilt angle/>
+  xml_dim_t x_dim = x_det.dimensions();
+  double innerR = x_dim.rmin();
+  double outerR_ref = x_dim.rmax();
+  double crystal_thick = xml_comp_t(x_det.child(_Unicode(crystal))).thickness();
+  double back_space = xml_comp_t(x_det.child(_Unicode(backspace))).thickness();
+  double halfZ = x_dim.zhalf();
+  int nSec_phi = x_dim.nphi();
+  int nModule_z = x_dim.nz();
 
-  auto Cframe_thick = description.constant<double>("FrameThickness");
-  auto Cseg_thick = description.constant<double>("SegThickness");
-  auto module_tilt = description.constant<double>("ModuleTiltAngle");
+  double Cframe_thick = xml_comp_t(x_det.child(_Unicode(frame))).thickness();
+  double Cseg_thick = xml_comp_t(x_det.child(_Unicode(wall))).thickness();
+  double module_tilt = xml_dim_t(x_det.child(_Unicode(tilt))).angle();
 
   // auto fiber_r = description.constant<double>("FiberRadius");
   // auto cladding_thick = description.constant<double>("CladdingThickness");
@@ -109,10 +115,12 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
   std::cout << "    in +y side: k = " << tmp_slope2 << ", b = " << tmp_intercept2 << std::endl;
   std::cout << "  Calculated +y direction shift: " << shift_phi_pos << std::endl;
   std::cout << "  Calculated -y direction shift: " << shift_phi_neg << std::endl;
-  double halfZ_out = outerR * cos(dphi_sec / 2.) / tan(atan(innerR / halfZ) - module_tilt);
+  // The two barrel end walls are not tilted (they point to the IP), so the outer half length follows
+  // the untilted end angle.
+  double halfZ_out = outerR * cos(dphi_sec / 2.) / tan(atan(innerR / halfZ));
   double tilt_rad = atan((outerR * sin(dphi_sec / 2.) + shift_phi_pos) / (outerR * cos(dphi_sec / 2.)));
-  std::cout << "  halfZ out = " << outerR * cos(dphi_sec / 2.) << " / tan(" << atan(innerR / halfZ) - module_tilt
-            << ") " << std::endl;
+  std::cout << "  halfZ out = " << outerR * cos(dphi_sec / 2.) << " / tan(" << atan(innerR / halfZ) << ") "
+            << std::endl;
   outerR = sqrt(pow(outerR * cos(dphi_sec / 2.), 2) + pow((outerR * sin(dphi_sec / 2.) + shift_phi_pos), 2));
   std::cout << "  Outer radius and halfZ considering this: " << outerR << ", " << halfZ_out << std::endl;
 
@@ -146,16 +154,21 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
   caloData->extent[4] = 0.;
   caloData->extent[5] = 0.;
 
+  // DDRec convention: distance is the innermost face of the layer (inner frame face) and distance + inner_thickness
+  // the centre of the sensitive element (crystal centre).
   LayeredCalorimeterData::Layer layer;
   const double half_crystal_thick = crystal_thick / 2.;
-  layer.distance = innerR + Cframe_thick + half_crystal_thick;
+  layer.distance = innerR;
   layer.absorberThickness = 0.;
   layer.inner_thickness = Cframe_thick + half_crystal_thick;
   layer.outer_thickness = half_crystal_thick + back_space + Cframe_thick;
   layer.sensitive_thickness = crystal_thick;
-  // cellDimensions() returns {dPhi, dTheta} (in rad); cellSize0 is along the beam (theta) for BarrelLayout
-  layer.cellSize0 = cell_size[1];
-  layer.cellSize1 = cell_size[0];
+  // Cell sizes (length) at the crystal centre where it is closest to the IP (theta = 90 deg, R = crystal centre):
+  // cellSize0 along the beam (theta), cellSize1 along phi. Away from 90 deg the theta size grows as 1 / sin(theta)
+  // (and the phi size too with scale_phi_bins_with_sin_theta), since the segmentation is angular.
+  const double r_crystal_centre = layer.distance + layer.inner_thickness;
+  layer.cellSize0 = r_crystal_centre * grid->gridSizeTheta();
+  layer.cellSize1 = r_crystal_centre * grid->gridSizePhi();
   layer.inner_nRadiationLengths =
       Cframe_thick / MatCarbonfiber.radLength() + half_crystal_thick / MatCrystal.radLength();
   layer.outer_nRadiationLengths = half_crystal_thick / MatCrystal.radLength() + back_space / air.radLength() +
@@ -166,8 +179,9 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
                                     Cframe_thick / MatCarbonfiber.intLength();
   caloData->layers.push_back(layer);
 
-  TGeoTube* EcalBarrel = new TGeoTube(innerR, outerR, halfZ_out);
-  Volume EcalBarrelVol("EcalBarrel", EcalBarrel, air);
+  // Assembly instead of an envelope tube, so that the endcaps can extend into the barrel radial range
+  // beyond the (conical) barrel ends without overlapping an air envelope.
+  Assembly EcalBarrelVol("EcalBarrel");
   // EcalBarrelVol.setVisAttributes(description, "CaloVis");
 
   // ====== Carbon fiber frame as supporting, at inner and outer of barrel. ====== //
@@ -187,9 +201,10 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
   double innerR_sector = innerR + Cframe_thick;
   double outerR_sector = (innerR_sector + crystal_thick + back_space) / cos(dphi_sec / 2.);
 
-  halfZ_out = outerR_sector * cos(dphi_sec / 2.) / tan(atan(innerR_sector / halfZ) - module_tilt);
-  std::cout << "  halfZ out = " << outerR_sector * cos(dphi_sec / 2.) << " / tan("
-            << atan(innerR_sector / halfZ) - module_tilt << ") = " << halfZ_out << std::endl;
+  // Sector end faces follow the untilted end walls (pointing to the IP).
+  halfZ_out = outerR_sector * cos(dphi_sec / 2.) / tan(atan(innerR_sector / halfZ));
+  std::cout << "  halfZ out = " << outerR_sector * cos(dphi_sec / 2.) << " / tan(" << atan(innerR_sector / halfZ)
+            << ") = " << halfZ_out << std::endl;
 
   // Sector inner and outer width
   double inner_width_neg = fabs(tmp_slope1 * innerR_sector + tmp_intercept1);
@@ -224,8 +239,9 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
 
     double theta_min_module = theta_min + iz * theta_module;
     double theta_max_module = theta_min_module + theta_module;
-    double tilt_min = theta_min_module < M_PI / 2. ? -module_tilt : module_tilt;
-    double tilt_max = theta_max_module < M_PI / 2. ? -module_tilt : module_tilt;
+    // Internal walls are tilted towards larger |cos(theta)|; the two barrel end walls are not tilted.
+    double tilt_min = (iz == 0) ? 0. : (theta_min_module < M_PI / 2. ? -module_tilt : module_tilt);
+    double tilt_max = (iz == nModule_z - 1) ? 0. : (theta_max_module < M_PI / 2. ? -module_tilt : module_tilt);
     double tilt_min_local = atan((outerR_sector * cos(dphi_sec / 2.) - innerR_sector) /
                                  (outerR_sector * cos(dphi_sec / 2.) / tan(theta_min_module + tilt_min) -
                                   innerR_sector / tan(theta_min_module)));
@@ -243,10 +259,12 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
                       innerR_sector / tan(theta_max_module))
               << std::endl;
 
-    // Module height: keeping the total length = crystal thickness, so h = thick*sin(theta)
+    // Module height: every ray from the IP crossing the module front face has a path length
+    // >= crystal thickness, so h = thick*sin(theta), with theta the module boundary closest to 90 deg
+    // (IP-ray angle, not the local wall angle, which differs when module_tilt != 0).
     // Exception in the most central module: h = thick.
-    double height_module = (theta_max_module < M_PI / 2.) ? crystal_thick * fabs(sin(tilt_max_local))
-                                                          : crystal_thick * fabs(sin(tilt_min_local));
+    double height_module = (theta_max_module < M_PI / 2.) ? crystal_thick * fabs(sin(theta_max_module))
+                                                          : crystal_thick * fabs(sin(theta_min_module));
     if ((theta_max_module - M_PI / 2.) * (theta_min_module - M_PI / 2.) < 0)
       height_module = crystal_thick;
 

@@ -35,10 +35,15 @@ namespace DDSegmentation {
     registerParameter("rho_bin_count", "Number of bins for a uniform rho grid", m_rhoBinCount, 0,
                       SegmentationParameter::NoUnit, true);
     registerParameter("offset_R", "Offset in R", m_offsetR, 0., SegmentationParameter::LengthUnit, true);
+    registerParameter("offset_Z", "Endcap mode: |z| of the front plane (0: barrel mode, rho offset from offset_R)",
+                      m_offsetZ, 0., SegmentationParameter::LengthUnit, true);
     registerParameter("min_theta", "Minimum physical theta", m_minTheta, 0., SegmentationParameter::AngleUnit, true);
     registerParameter("max_theta", "Maximum physical theta", m_maxTheta, M_PI, SegmentationParameter::AngleUnit, true);
     registerParameter("clear_extra_fields", "Clear CellID fields other than system, phi, theta and rho",
                       m_clearExtraFields, true);
+    registerParameter("scale_phi_bins_with_sin_theta",
+                      "Number of phi bins per theta ring = round(phi_bins * sin(theta)) (phi_bins: ring at 90 deg)",
+                      m_scalePhiBinsWithSinTheta, false, SegmentationParameter::NoUnit, true);
     registerIdentifier("identifier_rho", "Cell ID identifier for rho", m_rhoID, "rho");
 
     m_thetaIndex = decoder()->index(fieldNameTheta());
@@ -73,8 +78,12 @@ namespace DDSegmentation {
         sqrt(radiusFromXYZ(globalPosition) * radiusFromXYZ(globalPosition) + globalPosition.Z * globalPosition.Z);
 
     // dd4hep::Segmentation::positionToBin: int(floor((position + 0.5 * cellSize - offset) / cellSize));
-    decoder()->set(cID, m_thetaIndex, positionToBin(lTheta, gridSizeTheta(), offsetTheta()));
-    decoder()->set(cID, m_phiIndex, wrapPhiBin(positionToBin(lPhi, gridSizePhi(), offsetPhi())));
+    // The phi grid depends on the theta ring (scale_phi_bins_with_sin_theta), hence theta is binned first.
+    const int thetaBin = positionToBin(lTheta, gridSizeTheta(), offsetTheta());
+    const int nPhi = phiBinsInThetaBin(thetaBin);
+    decoder()->set(cID, m_thetaIndex, thetaBin);
+    decoder()->set(cID, m_phiIndex,
+                   wrapPhiBin(positionToBin(lPhi, 2 * M_PI / static_cast<double>(nPhi), offsetPhi()), nPhi));
 
     // std::cout<<" Position to cellID "<<std::endl;
     // std::cout<<" Print rho bins: "<<std::endl;
@@ -88,7 +97,7 @@ namespace DDSegmentation {
     // Two ways for rho segmentation:
     if (m_rhoBins.size() < 2)
       // positionToBin(position, cellsize, offset): int(floor((position + 0.5 * cellSize - offset) / cellSize));
-      decoder()->set(cID, m_rhoIndex, positionToBin(lrho, m_grid_rho, m_offsetR / std::sin(lTheta) + m_grid_rho / 2.));
+      decoder()->set(cID, m_rhoIndex, positionToBin(lrho, m_grid_rho, rhoOffset(lTheta) + m_grid_rho / 2.));
     else {
       // Note: a bug was found in dd4hep::Segmentation, and fixed in PR: https://github.com/AIDASoft/DD4hep/pull/1625
       // Following function can be used after updating dd4hep to latest ver.
@@ -96,7 +105,7 @@ namespace DDSegmentation {
       // branch, no tag yet.
 
       std::vector<double>::const_iterator bin =
-          std::upper_bound(m_rhoBins.begin(), m_rhoBins.end(), lrho - m_offsetR / std::sin(lTheta));
+          std::upper_bound(m_rhoBins.begin(), m_rhoBins.end(), lrho - rhoOffset(lTheta));
       int rhoID = bin - m_rhoBins.begin() - 1;
 
       // Add a protection for cell ID, if the position is out of bin range
@@ -127,16 +136,43 @@ namespace DDSegmentation {
     // "<<0.5*(m_rhoBins[rhoValue] + m_rhoBins[rhoValue+1])<<std::endl;
 
     if (m_rhoBins.size() < 2)
-      return binToPosition(rhoValue, m_grid_rho, m_offsetR / std::sin(m_theta) + m_grid_rho / 2.);
+      return binToPosition(rhoValue, m_grid_rho, rhoOffset(m_theta) + m_grid_rho / 2.);
     else
-      return m_offsetR / std::sin(m_theta) + 0.5 * (m_rhoBins[rhoValue] + m_rhoBins[rhoValue + 1]);
+      return rhoOffset(m_theta) + 0.5 * (m_rhoBins[rhoValue] + m_rhoBins[rhoValue + 1]);
   }
 
-  int FCCSWGridRhoPhiTheta_k4geo::wrapPhiBin(int bin) const {
+  double FCCSWGridRhoPhiTheta_k4geo::rhoOffset(double theta) const {
+    if (m_offsetZ > 0.)
+      return m_offsetZ / std::fabs(std::cos(theta)); // endcap: front plane |z| = offset_Z
+    return m_offsetR / std::sin(theta);              // barrel: front cylinder R = offset_R
+  }
+
+  int FCCSWGridRhoPhiTheta_k4geo::wrapPhiBin(int bin, int nPhi) const {
     // phiFromXYZ() uses atan2(), hence phi bins are generally signed.  The first bin is
     // positionToBin(-pi), written as floor(0.5 - n/2 - offset/size) so that it is exact for zero offset.
-    const int firstPhiBin = static_cast<int>(std::floor(0.5 - 0.5 * phiBins() - offsetPhi() / gridSizePhi()));
-    return firstPhiBin + ((bin - firstPhiBin) % phiBins() + phiBins()) % phiBins();
+    const double gridSize = 2 * M_PI / static_cast<double>(nPhi);
+    const int firstPhiBin = static_cast<int>(std::floor(0.5 - 0.5 * nPhi - offsetPhi() / gridSize));
+    return firstPhiBin + ((bin - firstPhiBin) % nPhi + nPhi) % nPhi;
+  }
+
+  int FCCSWGridRhoPhiTheta_k4geo::phiBinsInThetaBin(int thetaBin) const {
+    if (!m_scalePhiBinsWithSinTheta)
+      return phiBins();
+    const double thetaCentre = binToPosition(thetaBin, gridSizeTheta(), offsetTheta());
+    // sin(pi - theta) = sin(theta): the rings of the -z endcap mirror those of +z.
+    const long nPhi = std::lround(phiBins() * std::sin(thetaCentre));
+    return static_cast<int>(std::max(1L, nPhi));
+  }
+
+  double FCCSWGridRhoPhiTheta_k4geo::phi(const CellID cID) const {
+    const int thetaBin = static_cast<int>(decoder()->get(cID, m_thetaIndex));
+    const int phiBin = static_cast<int>(decoder()->get(cID, m_phiIndex));
+    return binToPosition(phiBin, gridSizePhiInThetaBin(thetaBin), offsetPhi());
+  }
+
+  std::vector<double> FCCSWGridRhoPhiTheta_k4geo::cellDimensions(const CellID& cID) const {
+    const int thetaBin = static_cast<int>(decoder()->get(cID, m_thetaIndex));
+    return {gridSizePhiInThetaBin(thetaBin), gridSizeTheta()};
   }
 
   int FCCSWGridRhoPhiTheta_k4geo::firstThetaBin() const {
@@ -146,7 +182,21 @@ namespace DDSegmentation {
 
   int FCCSWGridRhoPhiTheta_k4geo::lastThetaBin() const {
     const auto& thetaField = (*decoder())[m_thetaIndex];
-    return std::min(positionToBin(m_maxTheta, gridSizeTheta(), offsetTheta()), static_cast<int>(thetaField.maxValue()));
+    const double lastTheta = (m_offsetZ > 0.) ? M_PI - m_minTheta : m_maxTheta;
+    return std::min(positionToBin(lastTheta, gridSizeTheta(), offsetTheta()), static_cast<int>(thetaField.maxValue()));
+  }
+
+  bool FCCSWGridRhoPhiTheta_k4geo::thetaBinInCoverage(int bin) const {
+    const auto& thetaField = (*decoder())[m_thetaIndex];
+    if (bin < static_cast<int>(thetaField.minValue()) || bin > static_cast<int>(thetaField.maxValue()))
+      return false;
+    auto inRange = [&](double thetaLow, double thetaHigh) {
+      return bin >= positionToBin(thetaLow, gridSizeTheta(), offsetTheta()) &&
+             bin <= positionToBin(thetaHigh, gridSizeTheta(), offsetTheta());
+    };
+    if (m_offsetZ > 0.) // endcap: +z and mirrored -z coverage
+      return inRange(m_minTheta, m_maxTheta) || inRange(M_PI - m_maxTheta, M_PI - m_minTheta);
+    return inRange(m_minTheta, m_maxTheta);
   }
 
   // overrides the DDSegmentation::Segmentation::neighbours method
@@ -163,25 +213,16 @@ namespace DDSegmentation {
     CellID base = cID;
     clearExtraFields(base);
 
-    // Allowed (offset, bin) pairs along each axis, including the cell's own bin.
-    std::vector<std::pair<int, int>> phiCandidates{{0, phiBin}}, thetaCandidates{{0, thetaBin}},
-        rhoCandidates{{0, rhoBin}};
-
-    if (phiBins() > 1) {
-      for (int d = 1; d <= rPhi; ++d) {
-        phiCandidates.push_back({-d, wrapPhiBin(phiBin - d)});
-        phiCandidates.push_back({d, wrapPhiBin(phiBin + d)});
-      }
-    }
+    // Allowed (offset, bin) pairs along theta and rho, including the cell's own bin.
+    // Phi candidates depend on the theta ring and are built in the loop below.
+    std::vector<std::pair<int, int>> thetaCandidates{{0, thetaBin}}, rhoCandidates{{0, rhoBin}};
 
     // Theta is not periodic.  Use the bins reached by points at the detector
     // boundaries rather than testing bin centres: the first/last physical
     // cells can have centres just outside the boundary.
-    const int minThetaBin = firstThetaBin();
-    const int maxThetaBin = lastThetaBin();
     for (int d = 1; d <= rTheta; ++d) {
       for (const int offset : {-d, d}) {
-        if (thetaBin + offset >= minThetaBin && thetaBin + offset <= maxThetaBin)
+        if (thetaBinInCoverage(thetaBin + offset))
           thetaCandidates.push_back({offset, thetaBin + offset});
       }
     }
@@ -206,8 +247,25 @@ namespace DDSegmentation {
     // Diamond (L1) window: |dPhi|/rPhi + |dTheta|/rTheta + |dRho|/rRho <= 1, evaluated in integers.
     // An axis with radius 0 only has offset 0, so its weight value is irrelevant.
     const long wPhi = std::max(rPhi, 1), wTheta = std::max(rTheta, 1), wRho = std::max(rRho, 1);
-    for (const auto& [dPhi, p] : phiCandidates) {
-      for (const auto& [dTheta, t] : thetaCandidates) {
+    // With scale_phi_bins_with_sin_theta the rings have different phi grids: in another ring, the phi offsets
+    // are counted from the bin containing the phi of this cell's centre.  Rings with the same grid use phiBin
+    // directly.
+    const int nPhi = phiBinsInThetaBin(thetaBin);
+    const double phiCentre = binToPosition(phiBin, 2 * M_PI / static_cast<double>(nPhi), offsetPhi());
+    for (const auto& [dTheta, t] : thetaCandidates) {
+      const int nPhiRing = phiBinsInThetaBin(t);
+      const int phiBinRing =
+          (nPhiRing == nPhi)
+              ? phiBin
+              : wrapPhiBin(positionToBin(phiCentre, 2 * M_PI / static_cast<double>(nPhiRing), offsetPhi()), nPhiRing);
+      std::vector<std::pair<int, int>> phiCandidates{{0, phiBinRing}};
+      if (nPhiRing > 1) {
+        for (int d = 1; d <= rPhi; ++d) {
+          phiCandidates.push_back({-d, wrapPhiBin(phiBinRing - d, nPhiRing)});
+          phiCandidates.push_back({d, wrapPhiBin(phiBinRing + d, nPhiRing)});
+        }
+      }
+      for (const auto& [dPhi, p] : phiCandidates) {
         for (const auto& [dRho, r] : rhoCandidates) {
           if (std::abs(dPhi) * wTheta * wRho + std::abs(dTheta) * wPhi * wRho + std::abs(dRho) * wPhi * wTheta >
               wPhi * wTheta * wRho)
