@@ -61,6 +61,7 @@ namespace sim {
     declareProperty("neighborRadius", m_userData.neighborRadius);
     declareProperty("fiberAttenuationLength", m_userData.fiberAttenuationLength);
     declareProperty("outerRadius", m_userData.outerRadius);
+    declareProperty("readoutZ", m_userData.readoutZ);
 
     InstanceCount::increment(this);
 
@@ -87,6 +88,8 @@ namespace sim {
              m_segmentation.type().c_str());
     if (m_userData.neighborRadius < 0)
       except("neighborRadius must be non-negative, got %d.", m_userData.neighborRadius);
+    if (m_userData.readoutZ < 0.)
+      except("readoutZ must be >= 0 (0: barrel mode with outerRadius), got %g.", m_userData.readoutZ);
 
     m_collectionID = defineCollection<Geant4Calorimeter::Hit>(m_collectionName);
     m_userData.rawCollectionID = defineCollection<Geant4Calorimeter::Hit>(m_userData.rawCollectionName);
@@ -251,14 +254,17 @@ namespace sim {
 
     // Create the hits and accumulate contributions from multiple steps
     //
+    // Longitudinal attenuation along the IP-pointing fiber from the hit to the readout surface
+    // (cylinder R = outerRadius for the barrel, plane |z| = readoutZ for the endcap); same for all cells of this step.
+    G4double longitudinalAttenuation = 1.;
+    if (m_userData.fiberAttenuationLength > 0. && m_userData.useLightResponseFunction) {
+      const G4double fiberLength = m_userData.fiberLength(global.perp(), std::fabs(global.z()), global.mag());
+      longitudinalAttenuation = std::exp(-fiberLength / m_userData.fiberAttenuationLength);
+    }
+
     Geant4HitCollection* coll = collection(m_collectionID);
     for (std::size_t i = 0; i < cellIDvec.size(); ++i) {
       const CellID hitCellID = cellIDvec[i];
-      G4double longitudinalAttenuation = 1.;
-      if (m_userData.fiberAttenuationLength > 0. && m_userData.useLightResponseFunction) {
-        longitudinalAttenuation =
-            std::exp(-(m_userData.outerRadius - global.perp()) / m_userData.fiberAttenuationLength);
-      }
       // std::cout<<"  Response for cell "<<cellIDvec[i]<<": "<<responseVec[i]<<" /
       // "<<longitudinalAttenuation<<std::endl;
 

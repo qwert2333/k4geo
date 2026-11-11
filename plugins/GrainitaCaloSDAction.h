@@ -25,8 +25,18 @@ namespace sim {
     // light-sharing window centred on the hit cell; 0 keeps only the hit cell.
     int neighborRadius = 3;
     const DDSegmentation::FCCSWGridRhoPhiTheta_k4geo* segmentation{};
+    // Longitudinal attenuation along IP-pointing fibers, from the hit to the readout surface:
+    //   readoutZ == 0 (barrel): cylinder R = outerRadius, fiber length = (outerRadius - R_hit) / sin(theta_hit)
+    //   readoutZ  > 0 (endcap): plane |z| = readoutZ,     fiber length = (readoutZ - |z_hit|) / |cos(theta_hit)|
     double fiberAttenuationLength = 1000.; // mm
     double outerRadius = 2645.;            // mm
+    double readoutZ = 0.;                  // mm
+
+    /// Length of the IP-pointing fiber from the hit position (mm) to the readout surface (mm), >= 0.
+    double fiberLength(double perp, double absZ, double mag) const {
+      double length = (readoutZ > 0.) ? (readoutZ - absZ) * mag / absZ : (outerRadius - perp) * mag / perp;
+      return length > 0. ? length : 0.;
+    }
 
     // Light response function parameters
     bool useLightResponseFunction = true;
