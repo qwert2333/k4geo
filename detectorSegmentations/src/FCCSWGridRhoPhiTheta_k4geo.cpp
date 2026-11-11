@@ -35,6 +35,8 @@ namespace DDSegmentation {
     registerParameter("rho_bin_count", "Number of bins for a uniform rho grid", m_rhoBinCount, 0,
                       SegmentationParameter::NoUnit, true);
     registerParameter("offset_R", "Offset in R", m_offsetR, 0., SegmentationParameter::LengthUnit, true);
+    registerParameter("offset_Z", "Endcap mode: |z| of the front plane (0: barrel mode, rho offset from offset_R)",
+                      m_offsetZ, 0., SegmentationParameter::LengthUnit, true);
     registerParameter("min_theta", "Minimum physical theta", m_minTheta, 0., SegmentationParameter::AngleUnit, true);
     registerParameter("max_theta", "Maximum physical theta", m_maxTheta, M_PI, SegmentationParameter::AngleUnit, true);
     registerParameter("clear_extra_fields", "Clear CellID fields other than system, phi, theta and rho",
@@ -88,7 +90,7 @@ namespace DDSegmentation {
     // Two ways for rho segmentation:
     if (m_rhoBins.size() < 2)
       // positionToBin(position, cellsize, offset): int(floor((position + 0.5 * cellSize - offset) / cellSize));
-      decoder()->set(cID, m_rhoIndex, positionToBin(lrho, m_grid_rho, m_offsetR / std::sin(lTheta) + m_grid_rho / 2.));
+      decoder()->set(cID, m_rhoIndex, positionToBin(lrho, m_grid_rho, rhoOffset(lTheta) + m_grid_rho / 2.));
     else {
       // Note: a bug was found in dd4hep::Segmentation, and fixed in PR: https://github.com/AIDASoft/DD4hep/pull/1625
       // Following function can be used after updating dd4hep to latest ver.
@@ -96,7 +98,7 @@ namespace DDSegmentation {
       // branch, no tag yet.
 
       std::vector<double>::const_iterator bin =
-          std::upper_bound(m_rhoBins.begin(), m_rhoBins.end(), lrho - m_offsetR / std::sin(lTheta));
+          std::upper_bound(m_rhoBins.begin(), m_rhoBins.end(), lrho - rhoOffset(lTheta));
       int rhoID = bin - m_rhoBins.begin() - 1;
 
       // Add a protection for cell ID, if the position is out of bin range
@@ -127,9 +129,15 @@ namespace DDSegmentation {
     // "<<0.5*(m_rhoBins[rhoValue] + m_rhoBins[rhoValue+1])<<std::endl;
 
     if (m_rhoBins.size() < 2)
-      return binToPosition(rhoValue, m_grid_rho, m_offsetR / std::sin(m_theta) + m_grid_rho / 2.);
+      return binToPosition(rhoValue, m_grid_rho, rhoOffset(m_theta) + m_grid_rho / 2.);
     else
-      return m_offsetR / std::sin(m_theta) + 0.5 * (m_rhoBins[rhoValue] + m_rhoBins[rhoValue + 1]);
+      return rhoOffset(m_theta) + 0.5 * (m_rhoBins[rhoValue] + m_rhoBins[rhoValue + 1]);
+  }
+
+  double FCCSWGridRhoPhiTheta_k4geo::rhoOffset(double theta) const {
+    if (m_offsetZ > 0.)
+      return m_offsetZ / std::fabs(std::cos(theta)); // endcap: front plane |z| = offset_Z
+    return m_offsetR / std::sin(theta);              // barrel: front cylinder R = offset_R
   }
 
   int FCCSWGridRhoPhiTheta_k4geo::wrapPhiBin(int bin) const {
@@ -146,7 +154,21 @@ namespace DDSegmentation {
 
   int FCCSWGridRhoPhiTheta_k4geo::lastThetaBin() const {
     const auto& thetaField = (*decoder())[m_thetaIndex];
-    return std::min(positionToBin(m_maxTheta, gridSizeTheta(), offsetTheta()), static_cast<int>(thetaField.maxValue()));
+    const double lastTheta = (m_offsetZ > 0.) ? M_PI - m_minTheta : m_maxTheta;
+    return std::min(positionToBin(lastTheta, gridSizeTheta(), offsetTheta()), static_cast<int>(thetaField.maxValue()));
+  }
+
+  bool FCCSWGridRhoPhiTheta_k4geo::thetaBinInCoverage(int bin) const {
+    const auto& thetaField = (*decoder())[m_thetaIndex];
+    if (bin < static_cast<int>(thetaField.minValue()) || bin > static_cast<int>(thetaField.maxValue()))
+      return false;
+    auto inRange = [&](double thetaLow, double thetaHigh) {
+      return bin >= positionToBin(thetaLow, gridSizeTheta(), offsetTheta()) &&
+             bin <= positionToBin(thetaHigh, gridSizeTheta(), offsetTheta());
+    };
+    if (m_offsetZ > 0.) // endcap: +z and mirrored -z coverage
+      return inRange(m_minTheta, m_maxTheta) || inRange(M_PI - m_maxTheta, M_PI - m_minTheta);
+    return inRange(m_minTheta, m_maxTheta);
   }
 
   // overrides the DDSegmentation::Segmentation::neighbours method
@@ -177,11 +199,9 @@ namespace DDSegmentation {
     // Theta is not periodic.  Use the bins reached by points at the detector
     // boundaries rather than testing bin centres: the first/last physical
     // cells can have centres just outside the boundary.
-    const int minThetaBin = firstThetaBin();
-    const int maxThetaBin = lastThetaBin();
     for (int d = 1; d <= rTheta; ++d) {
       for (const int offset : {-d, d}) {
-        if (thetaBin + offset >= minThetaBin && thetaBin + offset <= maxThetaBin)
+        if (thetaBinInCoverage(thetaBin + offset))
           thetaCandidates.push_back({offset, thetaBin + offset});
       }
     }

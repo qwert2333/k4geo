@@ -52,9 +52,14 @@ namespace DDSegmentation {
      */
     void neighboursInWindow(const CellID& cellID, std::set<CellID>& neighbours, int rPhi, int rTheta, int rRho) const;
 
-    /// First/last theta bin inside the physical coverage [min_theta, max_theta] (and the theta field range).
+    /// First/last theta bin inside the physical coverage (and the theta field range).
+    /// Barrel mode: [min_theta, max_theta]. Endcap mode (offset_Z > 0): the coverage is
+    /// [min_theta, max_theta] U [pi - max_theta, pi - min_theta]; these return its outer limits,
+    /// use thetaBinInCoverage() to test a bin.
     int firstThetaBin() const;
     int lastThetaBin() const;
+    /// Whether a theta bin is inside the physical coverage (and the theta field range).
+    bool thetaBinInCoverage(int bin) const;
 
     /**  Find neighbours of the cell.
      *   Definition of neighbours is explained on slide 9:
@@ -73,6 +78,9 @@ namespace DDSegmentation {
   protected:
     /// Get rho from cellID
     double rho(const CellID cID) const;
+    /// Distance from the IP, along the direction theta, to the front face of the detector:
+    /// offset_R / sin(theta) for a cylinder (barrel), offset_Z / |cos(theta)| for a plane (endcap, offset_Z > 0).
+    double rhoOffset(double theta) const;
 
   private:
     /// Clear all CellID fields except system, phi, theta and rho when enabled.
@@ -95,6 +103,8 @@ namespace DDSegmentation {
 
     /// the coordinate offset in rho / R
     double m_offsetR; // In cylinder case: offset depends on R not rho.
+    /// endcap mode (> 0): |z| of the front plane from which rho is measured; 0 (default) = barrel mode with offset_R
+    double m_offsetZ;
 
     /// the field name used for rho
     std::string m_rhoID;
