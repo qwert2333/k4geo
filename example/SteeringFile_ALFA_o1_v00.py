@@ -149,7 +149,27 @@ SIM.action.mapActions = {
             "fiberAttenuationLength": 1e7,
             "outerRadius": 2645,
         },
-    )
+    ),
+    # Endcap: same light-sharing settings. Fibers point to the IP; the attenuation length is measured from
+    # the hit to the plane |z| = readoutZ (back face of the back carbon plate, as outerRadius for the barrel
+    # outer frame). Attenuation is effectively off with fiberAttenuationLength = 1e7, as for the barrel.
+    # Collections must have different names from the barrel ones.
+    "Grainita_ECAL_Endcaps_v02": (
+        "GrainitaCaloSDAction",
+        {
+            "ReadoutName": "GrainitaEcalEndcapRO",
+            "CollectionName": "GrainitaEndcapCalorimeterHits",
+            "RawCollectionName": "GrainitaEndcapCalorimeterHitsRaw",
+            "useLightResponseFunction": True,
+            "responseFuncSlope": 0.93,
+            "responseFuncIntersect": 0.206,
+            "responseFuncX0": 0.856,
+            "responseFuncAttLength": 3.4,
+            "neighborRadius": 3,
+            "fiberAttenuationLength": 1e7,
+            "readoutZ": 2843,
+        },
+    ),
 }
 
 ##  set the default run action
