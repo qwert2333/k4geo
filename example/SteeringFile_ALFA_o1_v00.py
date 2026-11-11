@@ -140,7 +140,7 @@ SIM.action.mapActions = {
         {
             "ReadoutName": "GrainitaEcalBarrelRO",
             "CollectionName": "GrainitaCalorimeterHits",
-            "useLightResponseFunction": True,
+            "useLightResponseFunction": False,
             "responseFuncSlope": 0.93,
             "responseFuncIntersect": 0.206,
             "responseFuncX0": 0.856,
@@ -156,7 +156,7 @@ SIM.action.mapActions = {
             "ReadoutName": "GrainitaEcalEndcapRO",
             "CollectionName": "GrainitaEndcapCalorimeterHits",
             "RawCollectionName": "GrainitaEndcapCalorimeterHitsRaw",
-            "useLightResponseFunction": True,
+            "useLightResponseFunction": False,
             "responseFuncSlope": 0.93,
             "responseFuncIntersect": 0.206,
             "responseFuncX0": 0.856,
