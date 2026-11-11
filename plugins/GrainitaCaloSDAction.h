@@ -38,7 +38,7 @@ namespace sim {
       return length > 0. ? length : 0.;
     }
 
-    // Light response function parameters
+    // Light response function parameters.
     bool useLightResponseFunction = true;
     // Light response function:
     //    y = slope*x + intersect (x<x0)
