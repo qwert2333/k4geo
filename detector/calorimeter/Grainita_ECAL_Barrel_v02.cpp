@@ -106,8 +106,7 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
   std::cout << "    in +y side: k = " << tmp_slope2 << ", b = " << tmp_intercept2 << std::endl;
   std::cout << "  Calculated +y direction shift: " << shift_phi_pos << std::endl;
   std::cout << "  Calculated -y direction shift: " << shift_phi_neg << std::endl;
-  // The two barrel end walls are not tilted (they point to the IP), so the outer half length follows
-  // the untilted end angle.
+  // The two barrel end walls at +- z are not tilted (they point to the IP). 
   double halfZ_out = outerR * cos(dphi_sec / 2.) / tan(atan(innerR / halfZ));
   double tilt_rad = atan((outerR * sin(dphi_sec / 2.) + shift_phi_pos) / (outerR * cos(dphi_sec / 2.)));
   std::cout << "  halfZ out = " << outerR * cos(dphi_sec / 2.) << " / tan(" << atan(innerR / halfZ) << ") "
@@ -195,15 +194,15 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
                                  (outerR_sector * cos(dphi_sec / 2.) / tan(theta_max_module + tilt_max) -
                                   innerR_sector / tan(theta_max_module)));
 
-    std::cout << "Module #" << iz << " Geometry parameters: " << std::endl;
-    std::cout << "Sector outerR - innerR = " << (outerR_sector * cos(dphi_sec / 2.) - innerR_sector);
-    std::cout << ", width (min) = "
-              << fabs(outerR_sector * cos(dphi_sec / 2.) / tan(theta_min_module + tilt_min) -
-                      innerR_sector / tan(theta_min_module));
-    std::cout << ", width (max) = "
-              << fabs(outerR_sector * cos(dphi_sec / 2.) / tan(theta_max_module + tilt_max) -
-                      innerR_sector / tan(theta_max_module))
-              << std::endl;
+    //std::cout << "Module #" << iz << " Geometry parameters: " << std::endl;
+    //std::cout << "Sector outerR - innerR = " << (outerR_sector * cos(dphi_sec / 2.) - innerR_sector);
+    //std::cout << ", width (min) = "
+    //          << fabs(outerR_sector * cos(dphi_sec / 2.) / tan(theta_min_module + tilt_min) -
+    //                  innerR_sector / tan(theta_min_module));
+    //std::cout << ", width (max) = "
+    //          << fabs(outerR_sector * cos(dphi_sec / 2.) / tan(theta_max_module + tilt_max) -
+    //                  innerR_sector / tan(theta_max_module))
+    //          << std::endl;
 
     // Module height: every ray from the IP crossing the module front face has a path length
     // >= crystal thickness, so h = thick*sin(theta), with theta the module boundary closest to 90 deg
@@ -218,10 +217,10 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
     double outer_width_module_neg = fabs(tmp_slope1 * (innerR_sector + height_module) + tmp_intercept1);
     double outer_width_module_pos = fabs(tmp_slope2 * (innerR_sector + height_module) + tmp_intercept2);
 
-    std::cout << "  Theta range: " << theta_min_module << ", " << theta_max_module << ", tilt angle " << tilt_min
-              << ", " << tilt_max << ", local tilt angle " << tilt_min_local << ", " << tilt_max_local << std::endl;
-    std::cout << "  height: " << height_module << ", inner width " << inner_width_neg << ", " << inner_width_pos;
-    std::cout << ", outer width " << outer_width_module_neg << ", " << outer_width_module_pos << std::endl;
+    //std::cout << "  Theta range: " << theta_min_module << ", " << theta_max_module << ", tilt angle " << tilt_min
+    //          << ", " << tilt_max << ", local tilt angle " << tilt_min_local << ", " << tilt_max_local << std::endl;
+    //std::cout << "  height: " << height_module << ", inner width " << inner_width_neg << ", " << inner_width_pos;
+    //std::cout << ", outer width " << outer_width_module_neg << ", " << outer_width_module_pos << std::endl;
 
     double vertices_frame[16] = {
         innerR_sector / tan(theta_min_module),
@@ -243,12 +242,12 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
         outer_width_module_pos,
     };
 
-    std::cout << "  Inner surface vertices: " << std::endl;
-    for (int i = 0; i < 8; i += 2)
-      std::cout << "    [" << vertices_frame[i] << ", " << vertices_frame[i + 1] << "], " << std::endl;
-    std::cout << "  Outer surface vertices: " << std::endl;
-    for (int i = 8; i < 16; i += 2)
-      std::cout << "    [" << vertices_frame[i] << ", " << vertices_frame[i + 1] << "], " << std::endl;
+    //std::cout << "  Inner surface vertices: " << std::endl;
+    //for (int i = 0; i < 8; i += 2)
+    //  std::cout << "    [" << vertices_frame[i] << ", " << vertices_frame[i + 1] << "], " << std::endl;
+    //std::cout << "  Outer surface vertices: " << std::endl;
+    //for (int i = 8; i < 16; i += 2)
+    //  std::cout << "    [" << vertices_frame[i] << ", " << vertices_frame[i + 1] << "], " << std::endl;
 
     double vertices_crystal[16] = {
         innerR_sector / tan(theta_min_module) - Cseg_thick,

@@ -225,10 +225,10 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
     EightPointSolid Sector("EcalEndcapSector_" + side_name, sector_depth / 2., vertices_sector);
     Volume Sector_vol("EcalEndcapSector_" + side_name, Sector, air);
     Sector_vol.setVisAttributes(description, x_det.visStr());
-    if (side > 0) {
-      std::cout << "Sector (side +z, sector 0):" << std::endl;
-      print_vertices("Sector", vertices_sector, side, z_crystal_front, z_sector_back);
-    }
+    //if (side > 0) {
+    //  std::cout << "Sector (side +z, sector 0):" << std::endl;
+    //  print_vertices("Sector", vertices_sector, side, z_crystal_front, z_sector_back);
+    //}
 
     // ------ Modules along theta ------ //
     for (int it = 0; it < nModule_theta; it++) {
@@ -278,10 +278,10 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
       double vertices_frame[16], vertices_crystal[16];
       fill_vertices(vertices_frame, side, x_lo_front, x_hi_front, x_lo_back, x_hi_back, wall_lo, wall_hi);
       fill_vertices(vertices_crystal, side, xc_lo_front, xc_hi_front, xc_lo_back, xc_hi_back, wall_lo_c, wall_hi_c);
-      if (side > 0) {
-        print_vertices("Frame", vertices_frame, side, z_crystal_front, z_crystal_front + height_module);
-        print_vertices("Crystal", vertices_crystal, side, z_crystal_front, z_crystal_front + height_module);
-      }
+      // if (side > 0) {
+      //   print_vertices("Frame", vertices_frame, side, z_crystal_front, z_crystal_front + height_module);
+      //   print_vertices("Crystal", vertices_crystal, side, z_crystal_front, z_crystal_front + height_module);
+      // }
 
       std::string module_name = "EcalEndcapModule_" + side_name + "_" + std::to_string(it);
       EightPointSolid ModuleFrame(module_name, height_module / 2., vertices_frame);
