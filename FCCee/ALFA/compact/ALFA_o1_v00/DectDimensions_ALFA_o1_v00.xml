@@ -23,8 +23,8 @@
     <constant name="ECalBarrel_half_length" value="2300*mm"/>
 
     <constant name="Barrel_Endcap_gap" value="100*mm"/>
-    <constant name="ECalEndcaps_front_inner_radius" value="400*mm"/>
-    <constant name="ECalEndcaps_back_inner_radius" value="400*mm"/>
+    <constant name="ECalEndcaps_front_inner_radius" value="340*mm"/>
+    <constant name="ECalEndcaps_back_inner_radius" value="340*mm"/>
     <constant name="ECalEndcaps_front_outer_radius" value="ECalBarrel_inner_radius"/>
     <constant name="ECalEndcaps_back_outer_radius" value="ECalBarrel_outer_radius"/>  
     <constant name="ECalEndcaps_half_length" value="ECalBarrel_half_length+Barrel_Endcap_gap"/>
